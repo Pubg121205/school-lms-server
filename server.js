@@ -1,17 +1,12 @@
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
-const OpenAI = require("openai");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-});
 
 const db = mysql.createConnection({
   host: "ns95.dailysieure.com",
@@ -34,7 +29,7 @@ function calcTotal(x) {
 }
 
 app.get("/", (req, res) => {
-  res.send("School LMS API is running with MySQL + AI");
+  res.send("School LMS API is running with MySQL + Gemini AI");
 });
 
 // LOGIN
@@ -157,7 +152,7 @@ app.post("/api/admin/score", (req, res) => {
   );
 });
 
-// AI ADVISOR
+// AI ADVISOR - GEMINI
 app.post("/api/ai-advisor", async (req, res) => {
   try {
     const { question, student } = req.body;
@@ -166,13 +161,11 @@ app.post("/api/ai-advisor", async (req, res) => {
       return res.status(400).json({ message: "Bạn chưa nhập câu hỏi" });
     }
 
-    if (!process.env.OPENAI_API_KEY) {
-      return res.status(500).json({ message: "Chưa cấu hình OPENAI_API_KEY trên Render" });
+    if (!process.env.GEMINI_API_KEY) {
+      return res.status(500).json({ message: "Chưa cấu hình GEMINI_API_KEY trên Render" });
     }
 
-    const response = await openai.responses.create({
-      model: "gpt-5.2-mini",
-      instructions: `
+    const prompt = `
 Bạn là cố vấn học tập AI trong hệ thống LMS của trường học.
 Trả lời bằng tiếng Việt, ngắn gọn, dễ hiểu, phù hợp với sinh viên.
 
@@ -191,8 +184,7 @@ Phạm vi trả lời:
 
 Nếu câu hỏi ngoài phạm vi trường học, hãy từ chối nhẹ nhàng và hướng sinh viên quay lại chủ đề học tập.
 Không bịa quy định cụ thể nếu chưa có dữ liệu chính thức; hãy nói sinh viên liên hệ phòng đào tạo/cố vấn học tập khi cần xác minh.
-      `,
-      input: `
+
 Thông tin sinh viên:
 Tên: ${student?.full_name || "Không rõ"}
 Lớp: ${student?.class_name || "Không rõ"}
@@ -200,16 +192,48 @@ Tài khoản: ${student?.username || "Không rõ"}
 
 Câu hỏi:
 ${question}
-      `
-    });
+`;
 
-    res.json({
-      answer: response.output_text
-    });
+    const response = await fetch(
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + process.env.GEMINI_API_KEY,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [
+                {
+                  text: prompt
+                }
+              ]
+            }
+          ]
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      console.log("Gemini error:", data);
+      return res.status(500).json({
+        message: data.error?.message || "Lỗi Gemini API"
+      });
+    }
+
+    const answer =
+      data.candidates?.[0]?.content?.parts?.[0]?.text ||
+      "AI không trả lời được.";
+
+    res.json({ answer });
+
   } catch (error) {
     console.error("AI error:", error);
     res.status(500).json({
-      message: "AI đang lỗi, hết quota, sai API key hoặc server chưa cấu hình đúng"
+      message: "AI đang lỗi, sai API key hoặc server chưa cấu hình đúng"
     });
   }
 });
