@@ -8,129 +8,77 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-// THAY THÔNG TIN DATABASE CỦA BẠN Ở ĐÂY
 const db = mysql.createConnection({
   host: "ns95.dailysieure.com",
   user: "tdlsrhnuesite_hehe",
-  password: "@Binquynh76",
+  password: "MAT_KHAU_MOI",
   database: "tdlsrhnuesite_hehe"
 });
 
-db.connect((err) => {
-  if (err) {
-    console.error("Lỗi kết nối MySQL:", err);
-    return;
-  }
-  console.log("Đã kết nối MySQL thành công");
+db.connect(err => {
+  if (err) return console.log(err);
+  console.log("MySQL connected");
 });
 
-function calcTotal(item) {
-  return Number(
-    item.attendance * 0.1 +
-    item.mid * 0.3 +
-    item.final * 0.6
-  ).toFixed(2);
+function calcTotal(x){
+  return (x.attendance*0.1 + x.mid*0.3 + x.final*0.6).toFixed(2);
 }
 
-app.get("/", (req, res) => {
-  res.send("School LMS API is running with MySQL");
+// LOGIN
+app.post("/api/login",(req,res)=>{
+  const {username,password}=req.body;
+  db.query("SELECT * FROM users WHERE username=? AND password=?",
+  [username,password],(e,r)=>{
+    if(!r.length) return res.status(401).json({msg:"Sai TK"});
+    res.json(r[0]);
+  });
 });
 
-// Đăng nhập
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
+// STUDENTS
+app.get("/api/students",(req,res)=>{
+  db.query("SELECT id,full_name,class_name FROM users WHERE role='student'",
+  (e,r)=>res.json(r));
+});
 
+// SCORES
+app.get("/api/scores/:uid/:sem",(req,res)=>{
+  db.query("SELECT * FROM scores WHERE user_id=? AND semester=?",
+  [req.params.uid,req.params.sem],(e,r)=>{
+    res.json(r.map(x=>({...x,total:calcTotal(x)})));
+  });
+});
+
+// UPDATE SCORE
+app.put("/api/scores/:id",(req,res)=>{
+  const {attendance,mid,final}=req.body;
+  db.query("UPDATE scores SET attendance=?,mid=?,final=? WHERE id=?",
+  [attendance,mid,final,req.params.id],
+  ()=>res.json({msg:"Đã lưu"}));
+});
+
+// DELETE
+app.delete("/api/scores/:id",(req,res)=>{
+  db.query("DELETE FROM scores WHERE id=?",[req.params.id],
+  ()=>res.json({msg:"Đã xoá"}));
+});
+
+// ADD USER
+app.post("/api/admin/user",(req,res)=>{
+  const {full_name,username,password,class_name}=req.body;
   db.query(
-    `
-    SELECT id, full_name, username, role, class_name
-    FROM users
-    WHERE username = ? AND password = ?
-    `,
-    [username, password],
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Lỗi server" });
-      }
-
-      if (results.length === 0) {
-        return res.status(401).json({ message: "Sai tài khoản hoặc mật khẩu" });
-      }
-
-      res.json(results[0]);
-    }
+    "INSERT INTO users (full_name,username,password,role,class_name) VALUES (?,?,?,'student',?)",
+    [full_name,username,password,class_name],
+    ()=>res.json({msg:"Đã tạo user"})
   );
 });
 
-// Lấy danh sách học sinh
-app.get("/api/students", (req, res) => {
+// ADD SUBJECT
+app.post("/api/admin/score",(req,res)=>{
   db.query(
-    `
-    SELECT id, full_name, username, class_name
-    FROM users
-    WHERE role = 'student'
-    `,
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Lỗi lấy sinh viên" });
-      }
-
-      res.json(results);
-    }
+    "INSERT INTO scores (user_id,semester,subject,credit,attendance,mid,final) VALUES (?,?,?,?,?,?,?)",
+    Object.values(req.body),
+    ()=>res.json({msg:"Đã thêm môn"})
   );
 });
 
-// Lấy điểm theo học sinh và học kỳ
-app.get("/api/scores/:userId/:semester", (req, res) => {
-  const { userId, semester } = req.params;
-
-  db.query(
-    `
-    SELECT *
-    FROM scores
-    WHERE user_id = ? AND semester = ?
-    `,
-    [userId, semester],
-    (err, results) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Lỗi lấy bảng điểm" });
-      }
-
-      const data = results.map((item) => ({
-        ...item,
-        total: calcTotal(item)
-      }));
-
-      res.json(data);
-    }
-  );
-});
-
-// Admin sửa điểm
-app.put("/api/scores/:id", (req, res) => {
-  const { id } = req.params;
-  const { attendance, mid, final } = req.body;
-
-  db.query(
-    `
-    UPDATE scores
-    SET attendance = ?, mid = ?, final = ?
-    WHERE id = ?
-    `,
-    [attendance, mid, final, id],
-    (err) => {
-      if (err) {
-        console.error(err);
-        return res.status(500).json({ message: "Lỗi cập nhật điểm" });
-      }
-
-      res.json({ message: "Đã cập nhật điểm" });
-    }
-  );
-});
-
-app.listen(PORT, () => {
-  console.log("Server đang chạy tại cổng " + PORT);
-});
+app.listen(PORT,()=>console.log("Server OK"));
