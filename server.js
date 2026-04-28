@@ -16,7 +16,7 @@ const openai = new OpenAI({
 const db = mysql.createConnection({
   host: "ns95.dailysieure.com",
   user: "tdlsrhnuesite_hehe",
-  password: "MAT_KHAU_DATABASE_MOI",
+  password: "@Binquynh76",
   database: "tdlsrhnuesite_hehe",
   charset: "utf8mb4"
 });
