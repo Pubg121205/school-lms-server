@@ -171,27 +171,52 @@ app.post("/api/ai-advisor", (req, res) => {
     return res.status(400).json({ message: "Thiếu user" });
   }
 
-  const q = (question || "").toLowerCase();
+  db.query("SELECT * FROM ai_rules", (err, rules) => {
+    if (err) return res.status(500).json({ message: "Lỗi rules" });
 
-  db.query(
-    "SELECT * FROM scores WHERE user_id=? AND semester=?",
-    [student.id, semester || 1],
-    (e, scores) => {
-      if (e) return res.status(500).json({ message: "Lỗi DB" });
+    // 🔥 ưu tiên rule admin
+    const ruleAnswer = findRuleAnswer(question, rules);
 
-      let answer = "";
-
-      if (isScoreQuestion(q)) {
-        answer = analyzeStudy(scores, student, question);
-      } else {
-        answer = answerGeneral(question, student);
-      }
-
-      res.json({ answer });
+    if (ruleAnswer) {
+      return res.json({
+        answer: `AI: ${ruleAnswer}`
+      });
     }
-  );
+
+    // 🔥 nếu không có rule → mới xét tiếp
+    const q = (question || "").toLowerCase();
+
+    db.query(
+      "SELECT * FROM scores WHERE user_id=? AND semester=?",
+      [student.id, semester || 1],
+      (e, scores) => {
+        if (e) return res.status(500).json({ message: "Lỗi DB" });
+
+        let answer = "";
+
+        if (isScoreQuestion(q)) {
+          answer = analyzeStudy(scores, student, question);
+        } else {
+          answer = answerGeneral(question, student);
+        }
+
+        res.json({ answer });
+      }
+    );
+  });
 });
 
+function findRuleAnswer(question, rules) {
+  const q = question.toLowerCase();
+
+  for (let rule of rules) {
+    if (q.includes(rule.keyword.toLowerCase())) {
+      return rule.response;
+    }
+  }
+
+  return null;
+}
 // ================= START =================
 app.listen(PORT, "0.0.0.0", () => {
   console.log("Server chạy port " + PORT);
