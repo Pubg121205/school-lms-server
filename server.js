@@ -34,7 +34,7 @@ function calcTotal(x) {
   return Number((attendance * 0.1 + mid * 0.3 + final * 0.6).toFixed(2));
 }
 
-// ================= AI TỰ TẠO PHÂN TÍCH HỌC TẬP =================
+// ================= AI TỰ TẠO =================
 function analyzeStudy(scores, student, question) {
   const q = (question || "").toLowerCase();
 
@@ -47,7 +47,7 @@ Hiện hệ thống chưa có dữ liệu điểm của em trong học kỳ này
 Em có thể:
 - Kiểm tra lại học kỳ đang chọn.
 - Liên hệ quản trị viên nếu điểm chưa được nhập.
-- Chủ động theo dõi điểm chuyên cần, điểm giữa kỳ và cuối kỳ để có kế hoạch học tập sớm.
+- Theo dõi điểm chuyên cần, điểm giữa kỳ và điểm cuối kỳ để có kế hoạch học tập phù hợp.
 `;
   }
 
@@ -56,12 +56,6 @@ Em có thể:
     const mid = Number(s.mid) || 0;
     const final = Number(s.final) || 0;
     const total = calcTotal(s);
-
-    let level = "";
-    if (total >= 8.5) level = "rất tốt";
-    else if (total >= 7) level = "khá";
-    else if (total >= 5) level = "trung bình";
-    else level = "nguy cơ không đạt";
 
     let mainReason = "điểm tổng kết chưa cao";
     if (final < 5) mainReason = "điểm cuối kỳ thấp";
@@ -75,7 +69,6 @@ Em có thể:
       mid,
       final,
       total,
-      level,
       mainReason
     };
   });
@@ -89,6 +82,9 @@ Em có thể:
   const weak = analyzed.filter(x => x.total < 5);
   const warning = analyzed.filter(x => x.total >= 5 && x.total < 6.5);
   const good = analyzed.filter(x => x.total >= 8);
+  const badAttendance = analyzed.filter(x => x.attendance < 5);
+  const badFinal = analyzed.filter(x => x.final < 5);
+
   const lowest = analyzed[0];
   const highest = analyzed[analyzed.length - 1];
 
@@ -101,6 +97,7 @@ Em có thể:
   let answer = "";
 
   answer += `Chào ${student?.full_name || "em"}, AI đã phân tích kết quả học tập hiện tại của em.\n\n`;
+
   answer += `Tổng quan học kỳ:\n`;
   answer += `- Số môn đã có điểm: ${analyzed.length}\n`;
   answer += `- Điểm trung bình tạm tính: ${avg}\n`;
@@ -108,14 +105,16 @@ Em có thể:
   answer += `- Môn cao nhất: ${highest.subject} (${highest.total} điểm)\n`;
   answer += `- Môn thấp nhất: ${lowest.subject} (${lowest.total} điểm)\n\n`;
 
+  answer += `Nhận xét chung:\n`;
+
   if (avg >= 8) {
-    answer += `Nhận xét chung: Kết quả học tập của em đang khá tốt. Em nên duy trì nhịp học hiện tại, đồng thời không chủ quan ở các môn có điểm dưới 7.\n\n`;
+    answer += `Kết quả học tập của em đang khá tốt. Em nên duy trì nhịp học hiện tại và tiếp tục cải thiện các môn chưa đạt mức cao.\n\n`;
   } else if (avg >= 6.5) {
-    answer += `Nhận xét chung: Kết quả của em ở mức ổn, nhưng vẫn còn dư địa để cải thiện. Em nên tập trung vào các môn điểm trung bình để kéo điểm học kỳ lên.\n\n`;
+    answer += `Kết quả của em ở mức ổn, nhưng vẫn còn khả năng cải thiện. Em nên tập trung vào các môn điểm trung bình để kéo điểm học kỳ lên.\n\n`;
   } else if (avg >= 5) {
-    answer += `Nhận xét chung: Em đang ở mức an toàn nhưng chưa thật sự vững. Nếu không cải thiện các môn thấp, kết quả cuối kỳ có thể bị ảnh hưởng.\n\n`;
+    answer += `Em đang ở mức an toàn nhưng chưa thật sự vững. Nếu không cải thiện các môn thấp, kết quả cuối kỳ có thể bị ảnh hưởng.\n\n`;
   } else {
-    answer += `Nhận xét chung: Em đang có nguy cơ học tập cao. Cần ưu tiên xử lý các môn dưới 5 điểm trước, đặc biệt là các môn có điểm cuối kỳ thấp.\n\n`;
+    answer += `Em đang có nguy cơ học tập cao. Cần ưu tiên xử lý các môn dưới 5 điểm trước, đặc biệt là các môn có điểm cuối kỳ thấp.\n\n`;
   }
 
   if (weak.length > 0) {
@@ -129,7 +128,7 @@ Em có thể:
   if (warning.length > 0) {
     answer += `Các môn cần chú ý thêm:\n`;
     warning.forEach(x => {
-      answer += `- ${x.subject}: ${x.total} điểm. Môn này chưa nguy hiểm nhưng cần cải thiện để tránh tụt điểm.\n`;
+      answer += `- ${x.subject}: ${x.total} điểm. Môn này chưa quá nguy hiểm nhưng cần cải thiện thêm.\n`;
     });
     answer += `\n`;
   }
@@ -153,9 +152,9 @@ Em có thể:
     answer += `Em nên ưu tiên học môn ${lowest.subject} trước vì đây là môn có điểm thấp nhất hiện tại (${lowest.total} điểm).\n`;
 
     if (lowest.final < 5) {
-      answer += `Đặc biệt, điểm cuối kỳ của môn này đang thấp nên em cần luyện đề, ôn trọng tâm và làm lại các dạng bài hay sai.\n`;
+      answer += `Điểm cuối kỳ của môn này thấp, nên em cần luyện đề, ôn trọng tâm và làm lại các dạng bài thường sai.\n`;
     } else if (lowest.mid < 5) {
-      answer += `Điểm giữa kỳ/điều kiện của môn này thấp, em nên học lại phần kiến thức nền và hoàn thành bài tập thường xuyên hơn.\n`;
+      answer += `Điểm giữa kỳ/điều kiện thấp, em nên học lại phần kiến thức nền và hoàn thành bài tập thường xuyên hơn.\n`;
     } else if (lowest.attendance < 5) {
       answer += `Điểm chuyên cần thấp, em cần đi học đầy đủ và tham gia hoạt động trên lớp nhiều hơn.\n`;
     }
@@ -167,14 +166,15 @@ Em có thể:
     q.includes("cải thiện") ||
     q.includes("nâng điểm")
   ) {
-    answer += `Để cải thiện kết quả, em nên làm theo 4 bước:\n`;
-    answer += `1. Chọn môn thấp nhất là ${lowest.subject} để xử lý trước.\n`;
-    answer += `2. Chia nội dung môn học thành từng chương nhỏ.\n`;
-    answer += `3. Mỗi ngày học lại 30-45 phút, ưu tiên phần hay sai.\n`;
-    answer += `4. Trước kỳ thi, luyện đề và ghi lại lỗi sai để tránh lặp lại.\n`;
+    answer += `Để cải thiện kết quả, em nên làm theo kế hoạch sau:\n`;
+    answer += `- Ưu tiên môn thấp nhất là ${lowest.subject}.\n`;
+    answer += `- Chia nội dung môn học thành từng phần nhỏ để học lại.\n`;
+    answer += `- Mỗi ngày học 30-45 phút cho môn yếu nhất.\n`;
+    answer += `- Làm bài tập theo từng dạng và ghi lại lỗi sai.\n`;
+    answer += `- Trước kỳ thi, luyện đề và ôn phần giáo viên nhấn mạnh.\n`;
 
     if (weak.length > 0) {
-      answer += `Vì em đang có ${weak.length} môn dưới 5 điểm, cần tập trung cứu các môn này trước khi nghĩ đến nâng điểm các môn khá.\n`;
+      answer += `Hiện em có ${weak.length} môn dưới 5 điểm, nên cần tập trung cứu các môn này trước.\n`;
     }
   }
 
@@ -189,7 +189,7 @@ Em có thể:
       weak.forEach(x => {
         answer += `- ${x.subject}: ${x.total} điểm.\n`;
       });
-      answer += `Em nên kiểm tra quy định của trường về điều kiện thi lại/học lại. Về học tập, cần ưu tiên các môn dưới 5 điểm trước.\n`;
+      answer += `Em nên ưu tiên các môn dưới 5 điểm và kiểm tra quy định của trường về thi lại hoặc học lại.\n`;
     } else {
       answer += `Hiện tại em chưa có môn nào dưới 5 điểm, nên nguy cơ trượt chưa cao. Tuy nhiên các môn từ 5 đến 6.5 vẫn cần cải thiện để an toàn hơn.\n`;
     }
@@ -241,7 +241,6 @@ Em có thể:
     q.includes("đi học") ||
     q.includes("vắng")
   ) {
-    const badAttendance = analyzed.filter(x => x.attendance < 5);
     if (badAttendance.length > 0) {
       answer += `Một số môn có điểm chuyên cần thấp:\n`;
       badAttendance.forEach(x => {
@@ -250,6 +249,21 @@ Em có thể:
       answer += `Em nên đi học đầy đủ hơn, ghi chép bài và tham gia hoạt động trên lớp để tránh mất điểm quá trình.\n`;
     } else {
       answer += `Điểm chuyên cần của em hiện không quá đáng lo. Em nên tiếp tục duy trì việc đi học đều.\n`;
+    }
+  }
+
+  else if (
+    q.includes("cuối kì") ||
+    q.includes("điểm cuối")
+  ) {
+    if (badFinal.length > 0) {
+      answer += `Một số môn có điểm cuối kỳ thấp:\n`;
+      badFinal.forEach(x => {
+        answer += `- ${x.subject}: cuối kỳ ${x.final} điểm.\n`;
+      });
+      answer += `Em cần ưu tiên luyện đề và ôn trọng tâm các môn này vì điểm cuối kỳ ảnh hưởng nhiều nhất đến tổng kết.\n`;
+    } else {
+      answer += `Điểm cuối kỳ của em hiện chưa có môn nào quá thấp. Em nên tiếp tục duy trì và luyện đề đều đặn.\n`;
     }
   }
 
@@ -397,7 +411,7 @@ app.post("/api/admin/score", (req, res) => {
   );
 });
 
-// ================= AI CỐ VẤN HỌC TẬP TỰ TẠO =================
+// ================= AI ADVISOR =================
 app.post("/api/ai-advisor", (req, res) => {
   const { student, semester, question } = req.body;
 
@@ -421,7 +435,6 @@ app.post("/api/ai-advisor", (req, res) => {
       }
 
       const answer = analyzeStudy(scores, student, question);
-
       res.json({ answer });
     }
   );
