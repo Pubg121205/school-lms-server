@@ -13,9 +13,9 @@ app.use(express.static(path.join(__dirname, "public")));
 // ================= MYSQL =================
 const db = mysql.createConnection({
   host: process.env.DB_HOST || "ns95.dailysieure.com",
-  user: process.env.DB_USER || "YOUR_DB_USER",
-  password: process.env.DB_PASSWORD || "YOUR_DB_PASSWORD",
-  database: process.env.DB_NAME || "YOUR_DB_NAME",
+  user: process.env.DB_USER || "tdlsrhnuesite_hehe",
+  password: process.env.DB_PASSWORD || "@",
+  database: process.env.DB_NAME || "tdlsrhnuesite_hehe",
   charset: "utf8mb4"
 });
 
