@@ -118,41 +118,7 @@ app.post("/api/admin/user", (req, res) => {
   );
 });
 
-// ADD SUBJECT / SCORE
-app.post("/api/admin/score", (req, res) => {
-  const {
-    user_id,
-    semester,
-    subject,
-    credit,
-    attendance,
-    mid,
-    final
-  } = req.body;
-
-  if (!user_id || !semester || !subject) {
-    return res.status(400).json({ message: "Thiếu thông tin môn học" });
-  }
-
-  db.query(
-    "INSERT INTO scores (user_id, semester, subject, credit, attendance, mid, final) VALUES (?, ?, ?, ?, ?, ?, ?)",
-    [
-      user_id,
-      semester,
-      subject,
-      credit || 0,
-      attendance || 0,
-      mid || 0,
-      final || 0
-    ],
-    (e) => {
-      if (e) return res.status(500).json({ message: "Lỗi thêm môn" });
-      res.json({ message: "Đã thêm môn" });
-    }
-  );
-});
-
-// AI ADVISOR - GEMINI
+// AI ADVISOR - OLLAMA (FREE)
 app.post("/api/ai-advisor", async (req, res) => {
   try {
     const { question, student } = req.body;
@@ -161,29 +127,14 @@ app.post("/api/ai-advisor", async (req, res) => {
       return res.status(400).json({ message: "Bạn chưa nhập câu hỏi" });
     }
 
-    if (!process.env.GEMINI_API_KEY) {
-      return res.status(500).json({ message: "Chưa cấu hình GEMINI_API_KEY trên Render" });
-    }
-
     const prompt = `
-Bạn là cố vấn học tập AI trong hệ thống LMS của trường học.
-Trả lời bằng tiếng Việt, ngắn gọn, dễ hiểu, phù hợp với sinh viên.
+Bạn là cố vấn học tập AI trong hệ thống LMS.
 
-Phạm vi trả lời:
-- học tập
-- điểm số
-- học kỳ
-- môn học
-- quy chế đào tạo
-- đăng ký học phần
-- thi cử
-- phúc khảo
-- học bổng
-- định hướng học tập
-- thắc mắc trong trường học
-
-Nếu câu hỏi ngoài phạm vi trường học, hãy từ chối nhẹ nhàng và hướng sinh viên quay lại chủ đề học tập.
-Không bịa quy định cụ thể nếu chưa có dữ liệu chính thức; hãy nói sinh viên liên hệ phòng đào tạo/cố vấn học tập khi cần xác minh.
+Yêu cầu:
+- Trả lời bằng tiếng Việt
+- Ngắn gọn, dễ hiểu
+- Đưa lời khuyên cụ thể
+- Nếu có dữ liệu sinh viên thì phân tích
 
 Thông tin sinh viên:
 Tên: ${student?.full_name || "Không rõ"}
@@ -194,48 +145,28 @@ Câu hỏi:
 ${question}
 `;
 
-    const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=" + process.env.GEMINI_API_KEY,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({
-          contents: [
-            {
-              parts: [
-                {
-                  text: prompt
-                }
-              ]
-            }
-          ]
-        })
-      }
-    );
+    const response = await fetch("http://localhost:11434/api/generate", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "qwen2.5:1.5b",
+        prompt: prompt,
+        stream: false
+      })
+    });
 
     const data = await response.json();
 
-    if (!response.ok) {
-      console.log("Gemini error:", data);
-      return res.status(500).json({
-        message: data.error?.message || "Lỗi Gemini API"
-      });
-    }
-
-    const answer =
-      data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      "AI không trả lời được.";
-
-    res.json({ answer });
+    res.json({
+      answer: data.response || "AI không trả lời được."
+    });
 
   } catch (error) {
-    console.error("AI error:", error);
+    console.error("Ollama error:", error);
     res.status(500).json({
-      message: "AI đang lỗi, sai API key hoặc server chưa cấu hình đúng"
+      message: "Không gọi được Ollama. Hãy kiểm tra Ollama đã chạy."
     });
   }
 });
-
-app.listen(PORT, () => console.log("Server OK"));
