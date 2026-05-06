@@ -206,6 +206,23 @@ app.post("/api/ai-advisor", (req, res) => {
   });
 });
 
+app.post("/api/admin/rule", (req, res) => {
+  const { keyword, response } = req.body;
+
+  if (!keyword || !response) {
+    return res.status(400).json({ message: "Thiếu dữ liệu" });
+  }
+
+  db.query(
+    "INSERT INTO ai_rules (keyword, response) VALUES (?, ?)",
+    [keyword, response],
+    (e) => {
+      if (e) return res.status(500).json({ message: "Lỗi DB" });
+      res.json({ message: "Đã thêm rule" });
+    }
+  );
+});
+
 function findRuleAnswer(question, rules) {
   const q = question.toLowerCase();
 
