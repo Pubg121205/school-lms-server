@@ -379,4 +379,19 @@ app.post("/api/admin/score",(req,res)=>{
   );
 });
 
+// LẤY DANH SÁCH MÔN DỰ KIẾN CHO TRANG ĐÀO TẠO
+app.get("/api/planned-courses", (req, res) => {
+  db.query(
+    "SELECT * FROM planned_courses ORDER BY semester ASC, id DESC",
+    (err, rows) => {
+      if (err) {
+        console.log(err);
+        return res.status(500).json({ message: "Lỗi lấy danh sách môn dự kiến" });
+      }
+
+      res.json(rows);
+    }
+  );
+});
+
 app.listen(PORT,()=>console.log("Server OK"));
