@@ -394,4 +394,32 @@ app.get("/api/planned-courses", (req, res) => {
   );
 });
 
+app.get("/api/all-scores", async (req, res) => {
+
+  try {
+
+    const [rows] = await db.query(`
+      SELECT
+        attendance,
+        mid,
+        final,
+        credit,
+        total
+      FROM scores
+    `);
+
+    res.json(rows);
+
+  } catch (error) {
+
+    console.error(error);
+
+    res.status(500).json({
+      message: "Lỗi lấy toàn bộ điểm"
+    });
+
+  }
+
+});
+
 app.listen(PORT,()=>console.log("Server OK"));
