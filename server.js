@@ -394,31 +394,48 @@ app.get("/api/planned-courses", (req, res) => {
   );
 });
 
-app.get("/api/all-scores", async (req, res) => {
+app.get("/api/all-scores", (req, res) => {
 
-  try {
+  db.query(
+    `
+    SELECT
+      attendance,
+      mid,
+      final,
+      credit
+    FROM scores
+    `,
+    (err, rows) => {
 
-    const [rows] = await db.query(`
-      SELECT
-        attendance,
-        mid,
-        final,
-        credit,
-        total
-      FROM scores
-    `);
+      if(err){
 
-    res.json(rows);
+        console.log(err);
 
-  } catch (error) {
+        return res.status(500).json({
+          message: "Lỗi lấy toàn bộ điểm"
+        });
 
-    console.error(error);
+      }
 
-    res.status(500).json({
-      message: "Lỗi lấy toàn bộ điểm"
-    });
+      // tự tính total
+      const result = rows.map(x => ({
 
-  }
+        attendance: x.attendance,
+        mid: x.mid,
+        final: x.final,
+        credit: x.credit,
+
+        total:
+          Number(x.attendance) * 0.1 +
+          Number(x.mid) * 0.3 +
+          Number(x.final) * 0.6
+
+      }));
+
+      res.json(result);
+
+    }
+  );
 
 });
 
