@@ -1,82 +1,102 @@
+```js
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
-const axios = require("axios");
 
 const app = express();
+
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 
-/* =========================
+/* ==================================
    MYSQL
-========================= */
+================================== */
 
 const db = mysql.createConnection({
+
   host: "ns95.dailysieure.com",
+
   user: "tdlsrhnuesite_hehe",
+
   password: "@Binquynh76",
-  database: "tdlsrhnuesite_school_lms"
+
+  database: "tdlsrhnuesite_school_lms",
+
+  charset: "utf8mb4"
+
 });
 
-db.connect((err) => {
-  if (err) {
-    console.log("MySQL lỗi:", err);
+db.connect((err)=>{
+
+  if(err){
+
+    console.log("MYSQL ERROR:",err);
     return;
   }
 
-  console.log("MySQL connected");
+  console.log("MYSQL CONNECTED");
 });
 
-/* =========================
-   GEMINI API KEY
-========================= */
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-
-/* =========================
+/* ==================================
    FUNCTIONS
-========================= */
+================================== */
 
-function calcTotal(x) {
-  return (
+function calcTotal(x){
+
+  return Number(
+
     x.attendance * 0.1 +
     x.mid * 0.3 +
     x.final * 0.6
+
   ).toFixed(2);
 }
 
-/* =========================
-   ROOT
-========================= */
+/* ==================================
+   HOME
+================================== */
 
-app.get("/", (req, res) => {
-  res.send("LMS Server Running");
+app.get("/",(req,res)=>{
+
+  res.send("LMS SERVER RUNNING");
 });
 
-/* =========================
+/* ==================================
    LOGIN
-========================= */
+================================== */
 
-app.post("/api/login", (req, res) => {
-  const { username, password } = req.body;
+app.post("/api/login",(req,res)=>{
+
+  const {username,password} = req.body;
 
   db.query(
-    "SELECT * FROM users WHERE username=? AND password=?",
-    [username, password],
-    (err, result) => {
 
-      if (err) {
+    `
+    SELECT *
+    FROM users
+    WHERE username=?
+    AND password=?
+    `,
+
+    [username,password],
+
+    (err,result)=>{
+
+      if(err){
+
         console.log(err);
+
         return res.status(500).json({
-          msg: "Lỗi server"
+          msg:"Lỗi server"
         });
       }
 
-      if (result.length === 0) {
+      if(result.length === 0){
+
         return res.status(401).json({
-          msg: "Sai tài khoản hoặc mật khẩu"
+          msg:"Sai tài khoản"
         });
       }
 
@@ -85,23 +105,30 @@ app.post("/api/login", (req, res) => {
   );
 });
 
-/* =========================
+/* ==================================
    STUDENTS
-========================= */
+================================== */
 
-app.get("/api/students", (req, res) => {
+app.get("/api/students",(req,res)=>{
 
   db.query(
+
     `
-    SELECT id, full_name, username, class_name
+    SELECT
+      id,
+      full_name,
+      username,
+      class_name
     FROM users
     WHERE role='student'
     `,
-    (err, result) => {
 
-      if (err) {
+    (err,result)=>{
+
+      if(err){
+
         return res.status(500).json({
-          msg: "Lỗi lấy danh sách"
+          msg:"Lỗi lấy sinh viên"
         });
       }
 
@@ -110,33 +137,45 @@ app.get("/api/students", (req, res) => {
   );
 });
 
-/* =========================
-   SCORES
-========================= */
+/* ==================================
+   GET SCORES
+================================== */
 
-app.get("/api/scores/:uid/:sem", (req, res) => {
+app.get("/api/scores/:uid/:semester",(req,res)=>{
 
-  const uid = req.params.uid;
-  const sem = req.params.sem;
+  const uid =
+  req.params.uid;
+
+  const semester =
+  req.params.semester;
 
   db.query(
+
     `
     SELECT *
     FROM scores
-    WHERE user_id=? AND semester=?
+    WHERE user_id=?
+    AND semester=?
     `,
-    [uid, sem],
-    (err, result) => {
 
-      if (err) {
+    [uid,semester],
+
+    (err,result)=>{
+
+      if(err){
+
         return res.status(500).json({
-          msg: "Lỗi lấy điểm"
+          msg:"Lỗi lấy điểm"
         });
       }
 
-      const data = result.map((x) => ({
+      const data =
+      result.map(x=>({
+
         ...x,
+
         total: calcTotal(x)
+
       }));
 
       res.json(data);
@@ -144,114 +183,242 @@ app.get("/api/scores/:uid/:sem", (req, res) => {
   );
 });
 
-/* =========================
-   UPDATE SCORE
-========================= */
+/* ==================================
+   GPA
+================================== */
 
-app.put("/api/scores/:id", (req, res) => {
+app.get("/api/gpa/:uid",(req,res)=>{
 
-  const { attendance, mid, final } = req.body;
+  const uid =
+  req.params.uid;
 
   db.query(
+
+    `
+    SELECT *
+    FROM scores
+    WHERE user_id=?
+    `,
+
+    [uid],
+
+    (err,result)=>{
+
+      if(err){
+
+        return res.status(500).json({
+          msg:"Lỗi GPA"
+        });
+      }
+
+      if(result.length === 0){
+
+        return res.json({
+
+          gpa:0,
+
+          scholarship:"Không có"
+        });
+      }
+
+      let totalCredits = 0;
+
+      let totalScore = 0;
+
+      result.forEach((x)=>{
+
+        const finalScore =
+
+          x.attendance * 0.1 +
+          x.mid * 0.3 +
+          x.final * 0.6;
+
+        totalCredits +=
+        Number(x.credit);
+
+        totalScore +=
+        finalScore * Number(x.credit);
+      });
+
+      const gpa = (
+
+        totalScore / totalCredits
+
+      ).toFixed(2);
+
+      let scholarship =
+      "Không có";
+
+      if(gpa >= 9){
+
+        scholarship =
+        "Học bổng xuất sắc";
+
+      }else if(gpa >= 8){
+
+        scholarship =
+        "Học bổng giỏi";
+
+      }else if(gpa >= 7){
+
+        scholarship =
+        "Học bổng khá";
+      }
+
+      res.json({
+
+        gpa,
+        scholarship
+
+      });
+    }
+  );
+});
+
+/* ==================================
+   UPDATE SCORE
+================================== */
+
+app.put("/api/scores/:id",(req,res)=>{
+
+  const {attendance,mid,final}
+  = req.body;
+
+  db.query(
+
     `
     UPDATE scores
-    SET attendance=?, mid=?, final=?
+    SET
+      attendance=?,
+      mid=?,
+      final=?
     WHERE id=?
     `,
+
     [
       attendance,
       mid,
       final,
       req.params.id
     ],
-    (err) => {
 
-      if (err) {
+    (err)=>{
+
+      if(err){
+
         return res.status(500).json({
-          msg: "Lỗi cập nhật"
+          msg:"Lỗi cập nhật"
         });
       }
 
       res.json({
-        msg: "Đã lưu"
+        msg:"Đã lưu"
       });
     }
   );
 });
 
-/* =========================
+/* ==================================
    DELETE SCORE
-========================= */
+================================== */
 
-app.delete("/api/scores/:id", (req, res) => {
+app.delete("/api/scores/:id",(req,res)=>{
 
   db.query(
-    "DELETE FROM scores WHERE id=?",
-    [req.params.id],
-    (err) => {
 
-      if (err) {
+    `
+    DELETE FROM scores
+    WHERE id=?
+    `,
+
+    [req.params.id],
+
+    (err)=>{
+
+      if(err){
+
         return res.status(500).json({
-          msg: "Lỗi xoá"
+          msg:"Lỗi xoá"
         });
       }
 
       res.json({
-        msg: "Đã xoá"
+        msg:"Đã xoá"
       });
     }
   );
 });
 
-/* =========================
-   ADMIN - ADD USER
-========================= */
+/* ==================================
+   ADD USER
+================================== */
 
-app.post("/api/admin/user", (req, res) => {
+app.post("/api/admin/user",(req,res)=>{
 
   const {
+
     full_name,
     username,
     password,
     class_name
+
   } = req.body;
 
   db.query(
+
     `
     INSERT INTO users
-    (full_name, username, password, role, class_name)
-    VALUES (?, ?, ?, 'student', ?)
+    (
+      full_name,
+      username,
+      password,
+      role,
+      class_name
+    )
+
+    VALUES
+    (
+      ?,
+      ?,
+      ?,
+      'student',
+      ?
+    )
     `,
+
     [
       full_name,
       username,
       password,
       class_name
     ],
-    (err) => {
 
-      if (err) {
+    (err)=>{
+
+      if(err){
+
         console.log(err);
 
         return res.status(500).json({
-          msg: "Không thể tạo tài khoản"
+          msg:"Lỗi tạo user"
         });
       }
 
       res.json({
-        msg: "Đã tạo user"
+        msg:"Đã tạo user"
       });
     }
   );
 });
 
-/* =========================
-   ADMIN - ADD SUBJECT
-========================= */
+/* ==================================
+   ADD SUBJECT
+================================== */
 
-app.post("/api/admin/score", (req, res) => {
+app.post("/api/admin/score",(req,res)=>{
 
   const {
+
     user_id,
     semester,
     subject,
@@ -259,9 +426,11 @@ app.post("/api/admin/score", (req, res) => {
     attendance,
     mid,
     final
+
   } = req.body;
 
   db.query(
+
     `
     INSERT INTO scores
     (
@@ -273,8 +442,19 @@ app.post("/api/admin/score", (req, res) => {
       mid,
       final
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?)
+
+    VALUES
+    (
+      ?,
+      ?,
+      ?,
+      ?,
+      ?,
+      ?,
+      ?
+    )
     `,
+
     [
       user_id,
       semester,
@@ -284,78 +464,33 @@ app.post("/api/admin/score", (req, res) => {
       mid,
       final
     ],
-    (err) => {
 
-      if (err) {
+    (err)=>{
+
+      if(err){
+
         console.log(err);
 
         return res.status(500).json({
-          msg: "Không thể thêm môn"
+          msg:"Lỗi thêm môn"
         });
       }
 
       res.json({
-        msg: "Đã thêm môn"
+        msg:"Đã thêm môn"
       });
     }
   );
 });
 
-/* =========================
-   AI CHAT
-========================= */
-
-app.post("/api/ai", async (req, res) => {
-
-  try {
-
-    const { message } = req.body;
-
-    const prompt = `
-Bạn là cố vấn học tập AI của trường Đại học Sư phạm Hà Nội.
-Hãy trả lời thân thiện, dễ hiểu và hỗ trợ sinh viên.
-
-Câu hỏi:
-${message}
-`;
-
-    const response = await axios.post(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`,
-      {
-        contents: [
-          {
-            parts: [
-              {
-                text: prompt
-              }
-            ]
-          }
-        ]
-      }
-    );
-
-    const reply =
-      response.data.candidates[0]
-      .content.parts[0].text;
-
-    res.json({
-      reply
-    });
-
-  } catch (err) {
-
-    console.log(err.response?.data || err);
-
-    res.status(500).json({
-      reply: "AI đang bận, thử lại sau"
-    });
-  }
-});
-
-/* =========================
+/* ==================================
    START
-========================= */
+================================== */
 
-app.listen(PORT, () => {
-  console.log("Server OK");
+app.listen(PORT,()=>{
+
+  console.log(
+    "SERVER RUNNING AT PORT " + PORT
+  );
 });
+```
