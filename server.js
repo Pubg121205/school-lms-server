@@ -92,20 +92,21 @@ app.get("/api/students", (req, res) => {
 
   db.query(
     "SELECT id, full_name, class_name FROM users WHERE role='student'",
-
-    (err, rows) => {
+    (err, result) => {
 
       if (err) {
-        console.log(err);
+
+        console.log("Lỗi students:", err);
 
         return res.status(500).json({
-          msg: "Không tải được sinh viên"
+          msg: "Lỗi server students"
         });
       }
 
-      res.json(rows);
+      res.json(result);
     }
   );
+
 });
 
 /* =========================
