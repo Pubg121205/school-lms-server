@@ -20,9 +20,9 @@ const db = mysql.createConnection({
 
   user: "tdlsrhnuesite_hehe",
 
-  password: "@Binquynh76",
+  password: "tdlsrhnuesite_hehe",
 
-  database: "tdlsrhnuesite_school_lms",
+  database: "tdlsrhnuesite_hehe",
 
   charset: "utf8mb4"
 
