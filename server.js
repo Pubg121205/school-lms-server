@@ -1,16 +1,4 @@
-Đây là `server.js` hoàn chỉnh dùng:
 
-* Express
-* MySQL
-* Render
-* GPA
-* học bổng
-* admin thêm user
-* admin thêm môn
-* sửa điểm
-* xoá điểm
-
-```js
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
@@ -32,9 +20,9 @@ const db = mysql.createConnection({
 
   user: "tdlsrhnuesite_hehe",
 
-  password: "@Binquynh76",
+  password: "tdlsrhnuesite_hehe",
 
-  database: "tdlsrhnuesite_school_lms",
+  database: "tdlsrhnuesite_hehe",
 
   charset: "utf8mb4"
 
@@ -526,4 +514,3 @@ app.listen(PORT,()=>{
     "SERVER RUNNING ON PORT " + PORT
   );
 });
-```
