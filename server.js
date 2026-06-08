@@ -1,4 +1,16 @@
+Đây là `server.js` hoàn chỉnh dùng:
 
+* Express
+* MySQL
+* Render
+* GPA
+* học bổng
+* admin thêm user
+* admin thêm môn
+* sửa điểm
+* xoá điểm
+
+```js
 const express = require("express");
 const mysql = require("mysql2");
 const cors = require("cors");
@@ -10,9 +22,9 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-/* ==================================
+/* =========================
    MYSQL
-================================== */
+========================= */
 
 const db = mysql.createConnection({
 
@@ -20,9 +32,9 @@ const db = mysql.createConnection({
 
   user: "tdlsrhnuesite_hehe",
 
-  password: "tdlsrhnuesite_hehe",
+  password: "@Binquynh76",
 
-  database: "tdlsrhnuesite_hehe",
+  database: "tdlsrhnuesite_school_lms",
 
   charset: "utf8mb4"
 
@@ -33,15 +45,16 @@ db.connect((err)=>{
   if(err){
 
     console.log("MYSQL ERROR:",err);
+
     return;
   }
 
   console.log("MYSQL CONNECTED");
 });
 
-/* ==================================
+/* =========================
    FUNCTIONS
-================================== */
+========================= */
 
 function calcTotal(x){
 
@@ -54,22 +67,25 @@ function calcTotal(x){
   ).toFixed(2);
 }
 
-/* ==================================
-   HOME
-================================== */
+/* =========================
+   ROOT
+========================= */
 
 app.get("/",(req,res)=>{
 
   res.send("LMS SERVER RUNNING");
 });
 
-/* ==================================
+/* =========================
    LOGIN
-================================== */
+========================= */
 
 app.post("/api/login",(req,res)=>{
 
-  const {username,password} = req.body;
+  const {
+    username,
+    password
+  } = req.body;
 
   db.query(
 
@@ -105,9 +121,9 @@ app.post("/api/login",(req,res)=>{
   );
 });
 
-/* ==================================
+/* =========================
    STUDENTS
-================================== */
+========================= */
 
 app.get("/api/students",(req,res)=>{
 
@@ -127,8 +143,11 @@ app.get("/api/students",(req,res)=>{
 
       if(err){
 
+        console.log(err);
+
         return res.status(500).json({
-          msg:"Lỗi lấy sinh viên"
+          msg:"MYSQL ERROR",
+          error: err
         });
       }
 
@@ -137,9 +156,9 @@ app.get("/api/students",(req,res)=>{
   );
 });
 
-/* ==================================
-   GET SCORES
-================================== */
+/* =========================
+   SCORES
+========================= */
 
 app.get("/api/scores/:uid/:semester",(req,res)=>{
 
@@ -164,6 +183,8 @@ app.get("/api/scores/:uid/:semester",(req,res)=>{
 
       if(err){
 
+        console.log(err);
+
         return res.status(500).json({
           msg:"Lỗi lấy điểm"
         });
@@ -183,9 +204,9 @@ app.get("/api/scores/:uid/:semester",(req,res)=>{
   );
 });
 
-/* ==================================
+/* =========================
    GPA
-================================== */
+========================= */
 
 app.get("/api/gpa/:uid",(req,res)=>{
 
@@ -206,6 +227,8 @@ app.get("/api/gpa/:uid",(req,res)=>{
 
       if(err){
 
+        console.log(err);
+
         return res.status(500).json({
           msg:"Lỗi GPA"
         });
@@ -218,6 +241,7 @@ app.get("/api/gpa/:uid",(req,res)=>{
           gpa:0,
 
           scholarship:"Không có"
+
         });
       }
 
@@ -275,23 +299,28 @@ app.get("/api/gpa/:uid",(req,res)=>{
   );
 });
 
-/* ==================================
+/* =========================
    UPDATE SCORE
-================================== */
+========================= */
 
 app.put("/api/scores/:id",(req,res)=>{
 
-  const {attendance,mid,final}
-  = req.body;
+  const {
+    attendance,
+    mid,
+    final
+  } = req.body;
 
   db.query(
 
     `
     UPDATE scores
+
     SET
       attendance=?,
       mid=?,
       final=?
+
     WHERE id=?
     `,
 
@@ -306,6 +335,8 @@ app.put("/api/scores/:id",(req,res)=>{
 
       if(err){
 
+        console.log(err);
+
         return res.status(500).json({
           msg:"Lỗi cập nhật"
         });
@@ -318,9 +349,9 @@ app.put("/api/scores/:id",(req,res)=>{
   );
 });
 
-/* ==================================
+/* =========================
    DELETE SCORE
-================================== */
+========================= */
 
 app.delete("/api/scores/:id",(req,res)=>{
 
@@ -337,6 +368,8 @@ app.delete("/api/scores/:id",(req,res)=>{
 
       if(err){
 
+        console.log(err);
+
         return res.status(500).json({
           msg:"Lỗi xoá"
         });
@@ -349,9 +382,9 @@ app.delete("/api/scores/:id",(req,res)=>{
   );
 });
 
-/* ==================================
-   ADD USER
-================================== */
+/* =========================
+   ADMIN ADD USER
+========================= */
 
 app.post("/api/admin/user",(req,res)=>{
 
@@ -411,9 +444,9 @@ app.post("/api/admin/user",(req,res)=>{
   );
 });
 
-/* ==================================
-   ADD SUBJECT
-================================== */
+/* =========================
+   ADMIN ADD SUBJECT
+========================= */
 
 app.post("/api/admin/score",(req,res)=>{
 
@@ -483,13 +516,14 @@ app.post("/api/admin/score",(req,res)=>{
   );
 });
 
-/* ==================================
+/* =========================
    START
-================================== */
+========================= */
 
 app.listen(PORT,()=>{
 
   console.log(
-    "SERVER RUNNING AT PORT " + PORT
+    "SERVER RUNNING ON PORT " + PORT
   );
 });
+```
