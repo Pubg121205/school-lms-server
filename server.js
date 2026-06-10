@@ -238,6 +238,71 @@ app.get("/planned-subjects",(req,res)=>{
   );
 
 });
+
+
+app.post("/admin/planned-subject",(req,res)=>{
+
+  const{
+    semester,
+    subject_name,
+    prerequisite_subject
+  }=req.body;
+
+  db.query(
+    `
+    INSERT INTO planned_subjects
+    (
+      semester,
+      subject_name,
+      prerequisite_subject
+    )
+    VALUES(?,?,?)
+    `,
+    [
+      semester,
+      subject_name,
+      prerequisite_subject || null
+    ],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg:err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã thêm môn dự kiến"
+      });
+
+    }
+  );
+
+});
+
+app.delete(
+"/planned-subject/:id",
+(req,res)=>{
+
+  db.query(
+    "DELETE FROM planned_subjects WHERE id=?",
+    [req.params.id],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg:err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã xóa"
+      });
+
+    }
+  );
+
+});
 /* CẬP NHẬT ĐIỂM */
 app.put("/scores/:id", (req, res) => {
 
