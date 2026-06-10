@@ -222,6 +222,22 @@ app.post("/admin/score", (req, res) => {
   );
 });
 
+
+app.get("/planned-subjects",(req,res)=>{
+
+  db.query(
+    "SELECT * FROM planned_subjects ORDER BY semester,id",
+    (err,rows)=>{
+
+      if(err){
+        return res.status(500).json([]);
+      }
+
+      res.json(rows);
+    }
+  );
+
+});
 /* CẬP NHẬT ĐIỂM */
 app.put("/scores/:id", (req, res) => {
 
