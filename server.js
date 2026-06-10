@@ -127,6 +127,45 @@ app.post("/admin/user", (req, res) => {
   );
 });
 
+
+app.post("/admin/planned-subject", (req, res) => {
+
+  const {
+    semester,
+    subject_name,
+    prerequisite_subject
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO planned_subjects
+    (
+      semester,
+      subject_name,
+      prerequisite_subject
+    )
+    VALUES (?,?,?)
+    `,
+    [
+      semester,
+      subject_name,
+      prerequisite_subject || null
+    ],
+    err => {
+
+      if (err) {
+        return res.status(500).json({
+          msg: err.message
+        });
+      }
+
+      res.json({
+        msg: "Đã thêm môn"
+      });
+    }
+  );
+
+});
 /* THÊM MÔN HỌC */
 app.post("/admin/score", (req, res) => {
 
