@@ -228,6 +228,23 @@ app.put("/scores/:id", (req, res) => {
   );
 });
 
+app.get("/planned-subjects", (req, res) => {
+
+  db.query(
+    "SELECT * FROM planned_subjects ORDER BY semester",
+    (err, rows) => {
+
+      if (err) {
+        return res.status(500).json({
+          msg: err.message
+        });
+      }
+
+      res.json(rows);
+    }
+  );
+
+});
 /* XÓA MÔN */
 app.delete("/scores/:id", (req, res) => {
 
