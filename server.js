@@ -430,10 +430,8 @@ app.delete("/planned-subject/:id", (req, res) => {
 
 app.get("/advice/:userId/:semester", (req, res) => {
 
-  const {
-    userId,
-    semester
-  } = req.params;
+  const { userId, semester } = req.params;
+  const question = (req.query.q || "").toLowerCase();
 
   db.query(
     `
@@ -457,37 +455,142 @@ app.get("/advice/:userId/:semester", (req, res) => {
         });
       }
 
-      const weak =
-        rows.filter(
-          x => Number(x.total) < 5
-        );
+      let totalCredit = 0;
+      let totalPoint = 0;
 
-      const avg =
-        rows.reduce(
-          (s, x) =>
-            s + Number(x.total),
-          0
-        ) / rows.length;
+      const failedSubjects = [];
+      const weakSubjects = [];
 
-      let advice =
-        `Bạn đang học ${rows.length} môn. `;
+      rows.forEach(row => {
 
-      if (weak.length > 0) {
+        const score = Number(row.total);
+        const credit = Number(row.credit);
 
-        advice +=
-          `Cần cải thiện ${weak.length} môn có điểm dưới 5. `;
+        let gpa4 = 0;
 
-      } else {
+        if(score >= 8.5) gpa4 = 4;
+        else if(score >= 8) gpa4 = 3.5;
+        else if(score >= 7) gpa4 = 3;
+        else if(score >= 6.5) gpa4 = 2.5;
+        else if(score >= 5.5) gpa4 = 2;
+        else if(score >= 5) gpa4 = 1;
+        else gpa4 = 0;
 
-        advice +=
-          "Kết quả học tập đang khá tốt. ";
+        totalPoint += gpa4 * credit;
+        totalCredit += credit;
+
+        if(score < 5){
+          failedSubjects.push(row.subject);
+        }
+
+        if(score < 6.5){
+          weakSubjects.push(
+            `${row.subject} (${score})`
+          );
+        }
+
+      });
+
+      const GPA =
+        totalCredit > 0
+        ? totalPoint / totalCredit
+        : 0;
+
+      let scholarship = false;
+
+      if(
+        GPA >= 3.2 &&
+        failedSubjects.length === 0
+      ){
+        scholarship = true;
       }
 
-      advice +=
-        `Điểm trung bình hiện tại khoảng ${avg.toFixed(2)}.`;
+      let answer = "";
+
+      if(
+        question.includes("gpa")
+      ){
+
+        answer =
+          `GPA hiện tại của bạn là ${GPA.toFixed(2)}/4.0`;
+
+      }
+
+      else if(
+        question.includes("học bổng")
+      ){
+
+        if(scholarship){
+
+          answer =
+            `Bạn đủ điều kiện xét học bổng. GPA hiện tại là ${GPA.toFixed(2)} và không có môn trượt.`;
+
+        }else{
+
+          answer =
+            `Bạn chưa đủ điều kiện học bổng. GPA hiện tại là ${GPA.toFixed(2)}.`;
+        }
+
+      }
+
+      else if(
+        question.includes("học lại") ||
+        question.includes("trượt")
+      ){
+
+        if(failedSubjects.length){
+
+          answer =
+            "Các môn cần học lại: " +
+            failedSubjects.join(", ");
+
+        }else{
+
+          answer =
+            "Hiện tại bạn không có môn nào phải học lại.";
+        }
+
+      }
+
+      else if(
+        question.includes("môn yếu")
+      ){
+
+        if(weakSubjects.length){
+
+          answer =
+            "Các môn nên cải thiện: " +
+            weakSubjects.join(", ");
+
+        }else{
+
+          answer =
+            "Không có môn yếu đáng lo ngại.";
+        }
+
+      }
+
+      else{
+
+        answer =
+          `Tổng số môn: ${rows.length}\n` +
+          `GPA: ${GPA.toFixed(2)}/4.0\n` +
+          `Môn trượt: ${failedSubjects.length}\n` +
+          `Học bổng: ${
+            scholarship
+            ? "Đủ điều kiện"
+            : "Chưa đủ điều kiện"
+          }`;
+
+        if(weakSubjects.length){
+
+          answer +=
+            `\nNên cải thiện: ${weakSubjects.join(", ")}`;
+        }
+      }
 
       res.json({
-        advice
+        advice: answer
       });
 
     }
