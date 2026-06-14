@@ -507,88 +507,242 @@ app.get("/advice/:userId/:semester", (req, res) => {
 
       let answer = "";
 
-      if(
-        question.includes("gpa")
-      ){
+/* GPA */
+
+if(
+    question.includes("gpa") ||
+    question.includes("điểm trung bình")
+){
+
+    let rank = "";
+
+    if(GPA >= 3.6) rank = "Xuất sắc";
+    else if(GPA >= 3.2) rank = "Giỏi";
+    else if(GPA >= 2.5) rank = "Khá";
+    else if(GPA >= 2.0) rank = "Trung bình";
+    else rank = "Yếu";
+
+    answer =
+    `GPA hiện tại: ${GPA.toFixed(2)}/4.0\n`+
+    `Xếp loại: ${rank}`;
+}
+
+/* HỌC BỔNG */
+
+else if(
+    question.includes("học bổng")
+){
+
+    if(scholarship){
 
         answer =
-          `GPA hiện tại của bạn là ${GPA.toFixed(2)}/4.0`;
+        `Bạn đủ điều kiện xét học bổng.\n`+
+        `GPA hiện tại: ${GPA.toFixed(2)}/4.0`;
 
-      }
-
-      else if(
-        question.includes("học bổng")
-      ){
-
-        if(scholarship){
-
-          answer =
-            `Bạn đủ điều kiện xét học bổng. GPA hiện tại là ${GPA.toFixed(2)} và không có môn trượt.`;
-
-        }else{
-
-          answer =
-            `Bạn chưa đủ điều kiện học bổng. GPA hiện tại là ${GPA.toFixed(2)}.`;
-        }
-
-      }
-
-      else if(
-        question.includes("học lại") ||
-        question.includes("trượt")
-      ){
-
-        if(failedSubjects.length){
-
-          answer =
-            "Các môn cần học lại: " +
-            failedSubjects.join(", ");
-
-        }else{
-
-          answer =
-            "Hiện tại bạn không có môn nào phải học lại.";
-        }
-
-      }
-
-      else if(
-        question.includes("môn yếu")
-      ){
-
-        if(weakSubjects.length){
-
-          answer =
-            "Các môn nên cải thiện: " +
-            weakSubjects.join(", ");
-
-        }else{
-
-          answer =
-            "Không có môn yếu đáng lo ngại.";
-        }
-
-      }
-
-      else{
+    }else{
 
         answer =
-          `Tổng số môn: ${rows.length}\n` +
-          `GPA: ${GPA.toFixed(2)}/4.0\n` +
-          `Môn trượt: ${failedSubjects.length}\n` +
-          `Học bổng: ${
-            scholarship
-            ? "Đủ điều kiện"
-            : "Chưa đủ điều kiện"
-          }`;
+        `Bạn chưa đủ điều kiện học bổng.\n`+
+        `GPA hiện tại: ${GPA.toFixed(2)}/4.0`;
+    }
+}
 
-        if(weakSubjects.length){
+/* HỌC LẠI */
 
-          answer +=
-            `\nNên cải thiện: ${weakSubjects.join(", ")}`;
-        }
-      }
+else if(
+    question.includes("học lại") ||
+    question.includes("trượt")
+){
 
+    if(failedSubjects.length){
+
+        answer =
+        "Các môn cần học lại:\n- " +
+        failedSubjects.join("\n- ");
+
+    }else{
+
+        answer =
+        "Hiện tại không có môn nào phải học lại.";
+    }
+}
+
+/* MÔN YẾU */
+
+else if(
+    question.includes("môn yếu") ||
+    question.includes("yếu")
+){
+
+    if(weakSubjects.length){
+
+        answer =
+        "Các môn nên cải thiện:\n- " +
+        weakSubjects.join("\n- ");
+
+    }else{
+
+        answer =
+        "Không có môn yếu đáng lo ngại.";
+    }
+}
+
+/* TÍN CHỈ */
+
+else if(
+    question.includes("tín chỉ")
+){
+
+    answer =
+    `Bạn đã tích lũy ${totalCredit} tín chỉ.`;
+}
+
+/* CẢNH BÁO HỌC VỤ */
+
+else if(
+    question.includes("cảnh báo") ||
+    question.includes("học vụ")
+){
+
+    if(GPA < 2){
+
+        answer =
+        `GPA hiện tại ${GPA.toFixed(2)}.\n`+
+        `Bạn có nguy cơ bị cảnh báo học vụ.`;
+
+    }else{
+
+        answer =
+        `GPA hiện tại ${GPA.toFixed(2)}.\n`+
+        `Bạn không nằm trong diện cảnh báo học vụ.`;
+    }
+}
+
+/* ĐIỂM CAO NHẤT */
+
+else if(
+    question.includes("cao nhất") ||
+    question.includes("giỏi nhất")
+){
+
+    let best = rows[0];
+
+    rows.forEach(r=>{
+
+        if(Number(r.total) > Number(best.total))
+            best = r;
+
+    });
+
+    answer =
+    `Môn có điểm cao nhất:\n`+
+    `${best.subject} (${best.total})`;
+}
+
+/* ĐIỂM THẤP NHẤT */
+
+else if(
+    question.includes("thấp nhất")
+){
+
+    let worst = rows[0];
+
+    rows.forEach(r=>{
+
+        if(Number(r.total) < Number(worst.total))
+            worst = r;
+
+    });
+
+    answer =
+    `Môn có điểm thấp nhất:\n`+
+    `${worst.subject} (${worst.total})`;
+}
+
+/* TƯ VẤN CẢI THIỆN */
+
+else if(
+    question.includes("cải thiện") ||
+    question.includes("nâng điểm")
+){
+
+    if(weakSubjects.length){
+
+        answer =
+        "Bạn nên tập trung cải thiện:\n- " +
+        weakSubjects.join("\n- ");
+
+    }else{
+
+        answer =
+        "Kết quả học tập khá tốt, chưa có môn cần cải thiện nhiều.";
+    }
+}
+
+/* KỲ TỚI HỌC GÌ */
+
+else if(
+    question.includes("kỳ tới") ||
+    question.includes("đăng ký môn") ||
+    question.includes("môn nào")
+){
+
+    answer =
+    "Bạn nên xem mục Chương trình đào tạo để biết các môn dự kiến mở ở kỳ tiếp theo.";
+}
+
+/* TỐT NGHIỆP */
+
+else if(
+    question.includes("tốt nghiệp")
+){
+
+    const needCredit = 130;
+
+    const remain =
+    needCredit - totalCredit;
+
+    answer =
+    `Đã tích lũy ${totalCredit}/${needCredit} tín chỉ.\n`+
+    `Còn thiếu ${remain} tín chỉ để tốt nghiệp.`;
+}
+
+/* NGHỀ NGHIỆP */
+
+else if(
+    question.includes("nghề") ||
+    question.includes("việc làm")
+){
+
+    answer =
+    `Dựa trên kết quả học tập hiện tại, bạn có thể định hướng:\n`+
+    `- Backend Developer\n`+
+    `- Data Analyst\n`+
+    `- AI Engineer`;
+}
+
+/* TỔNG QUAN */
+
+else{
+
+    answer =
+    `Tổng số môn: ${rows.length}\n`+
+    `GPA: ${GPA.toFixed(2)}/4.0\n`+
+    `Tín chỉ: ${totalCredit}\n`+
+    `Môn trượt: ${failedSubjects.length}\n`+
+    `Học bổng: ${
+        scholarship
+        ? "Đủ điều kiện"
+        : "Chưa đủ điều kiện"
+    }`;
+
+    if(weakSubjects.length){
+
+        answer +=
+        "\nMôn cần cải thiện:\n- " +
+        weakSubjects.join("\n- ");
+    }
+}
       res.json({
         advice: answer
       });
