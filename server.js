@@ -687,8 +687,105 @@ else if(
     question.includes("môn nào")
 ){
 
-    answer =
-    "Bạn nên xem mục Chương trình đào tạo để biết các môn dự kiến mở ở kỳ tiếp theo.";
+    const nextSemester =
+    Number(semester) + 1;
+
+    db.query(
+      `
+      SELECT *
+      FROM planned_subjects
+      WHERE semester=?
+      `,
+      [nextSemester],
+      (err, plannedRows)=>{
+
+        if(err){
+
+          return res.json({
+            advice:"Không lấy được môn dự kiến."
+          });
+        }
+
+        if(plannedRows.length === 0){
+
+          return res.json({
+            advice:
+            `Chưa có dữ liệu môn mở cho học kỳ ${nextSemester}.`
+          });
+        }
+
+        const passedSubjects =
+        rows
+        .filter(r => Number(r.total) >= 5)
+        .map(r => r.subject);
+
+        let canLearn = [];
+        let cannotLearn = [];
+
+        plannedRows.forEach(subject=>{
+
+          if(
+            !subject.prerequisite_subject
+          ){
+
+            canLearn.push(
+              subject.subject_name
+            );
+
+          }else{
+
+            if(
+              passedSubjects.includes(
+                subject.prerequisite_subject
+              )
+            ){
+
+              canLearn.push(
+                subject.subject_name
+              );
+
+            }else{
+
+              cannotLearn.push(
+                `${subject.subject_name}
+                (thiếu môn tiên quyết:
+                ${subject.prerequisite_subject})`
+              );
+            }
+          }
+
+        });
+
+        let answer =
+        `Các môn bạn có thể đăng ký HK${nextSemester}:\n`;
+
+        if(canLearn.length){
+
+          answer +=
+          "- " +
+          canLearn.join("\n- ");
+
+        }else{
+
+          answer +=
+          "Chưa có môn nào đủ điều kiện.";
+        }
+
+        if(cannotLearn.length){
+
+          answer +=
+          "\n\nCác môn chưa đủ điều kiện:\n- " +
+          cannotLearn.join("\n- ");
+        }
+
+        return res.json({
+          advice: answer
+        });
+
+      }
+    );
+
+    return;
 }
 
 /* TỐT NGHIỆP */
