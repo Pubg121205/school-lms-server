@@ -794,7 +794,7 @@ else if(
     question.includes("tốt nghiệp")
 ){
 
-    const needCredit = 130;
+    const needCredit = 136;
 
     const remain =
     needCredit - totalCredit;
