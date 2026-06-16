@@ -343,7 +343,7 @@ app.get("/planned-subjects", (req, res) => {
   db.query(
     `
     SELECT *
-    FROM planned_subjects
+    FROM curriculum
     ORDER BY semester,id
     `,
     (err, rows) => {
@@ -407,7 +407,7 @@ app.post("/admin/planned-subject", (req, res) => {
 app.delete("/planned-subject/:id", (req, res) => {
 
   db.query(
-    "DELETE FROM planned_subjects WHERE id=?",
+    "DELETE curriculum WHERE id=?",
     [req.params.id],
     err => {
 
@@ -553,7 +553,8 @@ app.get("/advice/:userId/:semester", (req, res) => {
     WHERE user_id=?
     
     `,
-    [userId, semester],
+    
+    [userId],
     (err, rows) => {
 
       if (err) {
@@ -806,7 +807,7 @@ else if(
     db.query(
       `
       SELECT *
-      FROM planned_subjects
+      FROM curriculum
       WHERE semester=?
       `,
       [nextSemester],
@@ -853,49 +854,53 @@ rows.forEach(r=>{
         let retakeSubjects = [];
 
 
-        if(
-  failedSubjects.includes(
-    subject.subject_name
-  )
-){
+plannedRows.forEach(subject=>{
 
-  retakeSubjects.push(
-    subject.subject_name
-  );
-}
-        plannedRows.forEach(subject=>{
+  if(
+    failedSubjects.includes(
+      subject.subject_name
+    )
+  ){
 
-          if(
-            !subject.prerequisite_subject
-          ){
+    retakeSubjects.push(
+      subject.subject_name
+    );
+  }
 
-            canLearn.push(
-              subject.subject_name
-            );
+  if(
+    !subject.prerequisite_subject
+  ){
 
-          }else{
+    canLearn.push(
+      subject.subject_name
+    );
 
-            if(
-              passedSubjects.includes(
-                subject.prerequisite_subject
-              )
-            ){
+  }else{
 
-              canLearn.push(
-                subject.subject_name
-              );
+    if(
+      passedSubjects.includes(
+        subject.prerequisite_subject
+      )
+    ){
 
-            }else{
+      canLearn.push(
+        subject.subject_name
+      );
 
-              cannotLearn.push(
-                `${subject.subject_name}
-                (thiếu môn tiên quyết:
-                ${subject.prerequisite_subject})`
-              );
-            }
-          }
+    }else{
 
-        });
+      cannotLearn.push(
+        `${subject.subject_name}
+       (thiếu môn tiên quyết:
+       ${subject.prerequisite_subject})`
+      );
+
+    }
+
+  }
+
+});
+       
 
         
 
