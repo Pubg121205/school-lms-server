@@ -426,6 +426,119 @@ app.delete("/planned-subject/:id", (req, res) => {
 
 });
 
+
+
+app.get("/curriculum", (req,res)=>{
+
+  db.query(
+    `
+    SELECT *
+    FROM curriculum
+    ORDER BY semester,id
+    `,
+    (err,rows)=>{
+
+      if(err){
+        return res.status(500).json({
+          msg:err.message
+        });
+      }
+
+      res.json(rows);
+    }
+  );
+
+});
+
+
+
+
+
+
+
+
+app.post("/admin/curriculum",(req,res)=>{
+
+  const {
+    semester,
+    subject_code,
+    subject_name,
+    credit,
+    prerequisite_subject
+  } = req.body;
+
+  db.query(
+    `
+    INSERT INTO curriculum
+    (
+      semester,
+      subject_code,
+      subject_name,
+      credit,
+      prerequisite_subject
+    )
+    VALUES
+    (
+      ?,?,?,?,?
+    )
+    `,
+    [
+      semester,
+      subject_code,
+      subject_name,
+      credit,
+      prerequisite_subject || null
+    ],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg:err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã thêm môn học"
+      });
+
+    }
+  );
+
+});
+
+
+
+
+app.delete("/curriculum/:id",(req,res)=>{
+
+  db.query(
+    "DELETE FROM curriculum WHERE id=?",
+    [req.params.id],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg:err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã xóa"
+      });
+
+    }
+  );
+
+});
+
+
+
+
+
+
+
+
+
 /* AI ADVICE */
 
 app.get("/advice/:userId/:semester", (req, res) => {
