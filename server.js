@@ -551,7 +551,7 @@ app.get("/advice/:userId/:semester", (req, res) => {
     SELECT *
     FROM scores
     WHERE user_id=?
-    AND semester=?
+    
     `,
     [userId, semester],
     (err, rows) => {
@@ -827,14 +827,42 @@ else if(
           });
         }
 
-        const passedSubjects =
-        rows
-        .filter(r => Number(r.total) >= 5)
-        .map(r => r.subject);
+const passedSubjects = [];
+const failedSubjects = [];
+
+rows.forEach(r=>{
+
+  if(Number(r.total) >= 5){
+
+    passedSubjects.push(
+      r.subject
+    );
+
+  }else{
+
+    failedSubjects.push(
+      r.subject
+    );
+
+  }
+
+});
 
         let canLearn = [];
         let cannotLearn = [];
+        let retakeSubjects = [];
 
+
+        if(
+  failedSubjects.includes(
+    subject.subject_name
+  )
+){
+
+  retakeSubjects.push(
+    subject.subject_name
+  );
+}
         plannedRows.forEach(subject=>{
 
           if(
@@ -869,8 +897,23 @@ else if(
 
         });
 
-        let answer =
-        `Các môn bạn có thể đăng ký HK${nextSemester}:\n`;
+        
+
+        let answer ="";
+
+
+        if(retakeSubjects.length){
+
+  answer +=
+  "Các môn nên học lại:\n- " +
+  retakeSubjects.join("\n- ");
+
+  answer += "\n\n";
+}
+
+
+        answer +=
+`Các môn có thể đăng ký HK${nextSemester}:\n`;
 
         if(canLearn.length){
 
