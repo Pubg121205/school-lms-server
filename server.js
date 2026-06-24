@@ -793,6 +793,61 @@ else if(
     }
 }
 
+
+  
+app.put("/curriculum/:id",(req,res)=>{
+
+  const { id } = req.params;
+
+  const {
+    semester,
+    subject_code,
+    subject_name,
+    credit,
+    prerequisite_subject
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE curriculum
+    SET
+      semester=?,
+      subject_code=?,
+      subject_name=?,
+      credit=?,
+      prerequisite_subject=?
+    WHERE id=?
+    `,
+    [
+      semester,
+      subject_code,
+      subject_name,
+      credit,
+      prerequisite_subject || null,
+      id
+    ],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg: err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã cập nhật môn học"
+      });
+
+    }
+  );
+
+});
+
+
+      
+
+  
+  
 /* KỲ TỚI HỌC GÌ */
 
 else if(
