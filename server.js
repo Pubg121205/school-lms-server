@@ -850,7 +850,7 @@ app.put("/curriculum/:id",(req,res)=>{
   
 /* KỲ TỚI HỌC GÌ */
 
-else if(
+else if({
     question.includes("kỳ tới") ||
     question.includes("đăng ký môn") ||
     question.includes("môn nào")
