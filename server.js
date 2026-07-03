@@ -11,9 +11,9 @@ app.use(express.json());
 
 const db = mysql.createPool({
   host: "ns95.dailysieure.com",
-  user: "tdlsrhnuesite_vip",
-  password: "tdlsrhnuesite_vip",
-  database: "tdlsrhnuesite_vip",
+  user: "tgtusnakesite_vip",
+  password: "tgtusnakesite_vip",
+  database: "tgtusnakesite_vip",
   waitForConnections: true,
   connectionLimit: 10
 });
@@ -67,7 +67,7 @@ app.post("/login", (req, res) => {
 app.get("/students", (req, res) => {
 
   db.query(
-    "SELECT * FROM users WHERE role='student'",
+    "SELECT * FROM rs WHERE role='student'",
     (err, rows) => {
 
       if (err) {
@@ -84,7 +84,7 @@ app.get("/students", (req, res) => {
 
 /* CREATE STUDENT */
 
-app.post("/admin/user", (req, res) => {
+app.post("/admin/r", (req, res) => {
 
   const {
     full_name,
