@@ -11,9 +11,9 @@ app.use(express.json());
 
 const db = mysql.createPool({
   host: "ns95.dailysieure.com",
-  user: "tgtusnakesite_vip",
-  password: "tgtusnakesite_vip",
-  database: "tgtusnakesite_vip",
+  user: "tgtusnakesite_huhu",
+  password: "@Binquynh76",
+  database: "tgtusnakesite_huhu",
   waitForConnections: true,
   connectionLimit: 10
 });
