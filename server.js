@@ -239,7 +239,7 @@ app.post("/admin/planned-subject",(req,res)=>{
   } = req.body;
 
   db.query(
-    `INSERT INTO planned_subjects
+    `INSERT INTO curriculum
     (semester,subject_name,prerequisite_subject)
     VALUES (?,?,?)`,
     [
@@ -361,53 +361,11 @@ app.get("/planned-subjects", (req, res) => {
 
 });
 
-app.post("/admin/planned-subject", (req, res) => {
-
-  const {
-    semester,
-    subject_name,
-    prerequisite_subject
-  } = req.body;
-
-  db.query(
-    `
-    INSERT INTO planned_subjects
-    (
-      semester,
-      subject_name,
-      prerequisite_subject
-    )
-    VALUES
-    (
-      ?,?,?
-    )
-    `,
-    [
-      semester,
-      subject_name,
-      prerequisite_subject || null
-    ],
-    err => {
-
-      if (err) {
-        return res.status(500).json({
-          msg: err.message
-        });
-      }
-
-      res.json({
-        msg: "Đã thêm môn dự kiến"
-      });
-
-    }
-  );
-
-});
 
 app.delete("/planned-subject/:id", (req, res) => {
 
   db.query(
-    "DELETE curriculum WHERE id=?",
+    "DELETE FROM curriculum WHERE id=?",
     [req.params.id],
     err => {
 
@@ -459,55 +417,6 @@ app.get("/curriculum", (req,res)=>{
 
 app.post("/admin/curriculum",(req,res)=>{
     
-app.put("/curriculum/:id",(req,res)=>{
-
-  const { id } = req.params;
-
-  const {
-    semester,
-    subject_code,
-    subject_name,
-    credit,
-    prerequisite_subject
-  } = req.body;
-
-  db.query(
-    `
-    UPDATE curriculum
-    SET
-      semester=?,
-      subject_code=?,
-      subject_name=?,
-      credit=?,
-      prerequisite_subject=?
-    WHERE id=?
-    `,
-    [
-      semester,
-      subject_code,
-      subject_name,
-      credit,
-      prerequisite_subject || null,
-      id
-    ],
-    err=>{
-
-      if(err){
-        return res.status(500).json({
-          msg: err.message
-        });
-      }
-
-      res.json({
-        msg:"Đã cập nhật môn học"
-      });
-
-    }
-  );
-
-});
-
-
 
   const {
     semester,
@@ -549,6 +458,53 @@ app.put("/curriculum/:id",(req,res)=>{
 
       res.json({
         msg:"Đã thêm môn học"
+      });
+
+    }
+  );
+
+});
+app.put("/curriculum/:id",(req,res)=>{
+
+  const { id } = req.params;
+
+  const {
+    semester,
+    subject_code,
+    subject_name,
+    credit,
+    prerequisite_subject
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE curriculum
+    SET
+      semester=?,
+      subject_code=?,
+      subject_name=?,
+      credit=?,
+      prerequisite_subject=?
+    WHERE id=?
+    `,
+    [
+      semester,
+      subject_code,
+      subject_name,
+      credit,
+      prerequisite_subject || null,
+      id
+    ],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg: err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã cập nhật môn học"
       });
 
     }
