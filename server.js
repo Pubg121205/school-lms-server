@@ -12,7 +12,7 @@ app.use(express.json());
 const db = mysql.createPool({
   host: "ns95.dailysieure.com",
   user: "tgtusnakesite_huhu",
-  password: "@Binquynh76",
+  password: "tgtusnakesite_huhu",
   database: "tgtusnakesite_huhu",
   waitForConnections: true,
   connectionLimit: 10
