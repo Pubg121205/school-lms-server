@@ -458,6 +458,56 @@ app.get("/curriculum", (req,res)=>{
 
 
 app.post("/admin/curriculum",(req,res)=>{
+    
+app.put("/curriculum/:id",(req,res)=>{
+
+  const { id } = req.params;
+
+  const {
+    semester,
+    subject_code,
+    subject_name,
+    credit,
+    prerequisite_subject
+  } = req.body;
+
+  db.query(
+    `
+    UPDATE curriculum
+    SET
+      semester=?,
+      subject_code=?,
+      subject_name=?,
+      credit=?,
+      prerequisite_subject=?
+    WHERE id=?
+    `,
+    [
+      semester,
+      subject_code,
+      subject_name,
+      credit,
+      prerequisite_subject || null,
+      id
+    ],
+    err=>{
+
+      if(err){
+        return res.status(500).json({
+          msg: err.message
+        });
+      }
+
+      res.json({
+        msg:"Đã cập nhật môn học"
+      });
+
+    }
+  );
+
+});
+
+
 
   const {
     semester,
@@ -794,55 +844,6 @@ else if(
 }
 
 
-  
-app.put("/curriculum/:id",(req,res)=>{
-
-  const { id } = req.params;
-
-  const {
-    semester,
-    subject_code,
-    subject_name,
-    credit,
-    prerequisite_subject
-  } = req.body;
-
-  db.query(
-    `
-    UPDATE curriculum
-    SET
-      semester=?,
-      subject_code=?,
-      subject_name=?,
-      credit=?,
-      prerequisite_subject=?
-    WHERE id=?
-    `,
-    [
-      semester,
-      subject_code,
-      subject_name,
-      credit,
-      prerequisite_subject || null,
-      id
-    ],
-    err=>{
-
-      if(err){
-        return res.status(500).json({
-          msg: err.message
-        });
-      }
-
-      res.json({
-        msg:"Đã cập nhật môn học"
-      });
-
-    }
-  );
-
-});
-
 
       
 
@@ -850,7 +851,7 @@ app.put("/curriculum/:id",(req,res)=>{
   
 /* KỲ TỚI HỌC GÌ */
 
-else if({
+else if(
     question.includes("kỳ tới") ||
     question.includes("đăng ký môn") ||
     question.includes("môn nào")
