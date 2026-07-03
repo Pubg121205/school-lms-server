@@ -234,17 +234,21 @@ app.post("/admin/planned-subject",(req,res)=>{
 
   const {
     semester,
+    subject_code,
     subject_name,
+    credit,
     prerequisite_subject
   } = req.body;
 
   db.query(
     `INSERT INTO curriculum
-    (semester,subject_name,prerequisite_subject)
-    VALUES (?,?,?)`,
+    (semester,subject_code,subject_name,credit,prerequisite_subject)
+    VALUES (?,?,?,?,?)`,
     [
       semester,
+      subject_code,
       subject_name,
+      credit,
       prerequisite_subject || null
     ],
     err => {
