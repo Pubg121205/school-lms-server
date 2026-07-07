@@ -433,28 +433,20 @@ app.get("/curriculum", (req,res)=>{
 });
 
 
-app.get("/curriculum/:semester",(req,res)=>{
-
-const semester=req.params.semester;
+app.get("/curriculum",(req,res)=>{
 
 db.query(
-
 `
 SELECT *
 FROM curriculum
-WHERE semester=?
-ORDER BY subject_code
+ORDER BY semester, subject_code
 `,
-[semester],
-
 (err,rows)=>{
 
 if(err){
-
 return res.status(500).json({
 msg:err.message
 });
-
 }
 
 res.json(rows);
@@ -462,7 +454,6 @@ res.json(rows);
 });
 
 });
-
 
 
 
@@ -865,17 +856,16 @@ else if(
     question.includes("môn nào")
 ){
 
-    const nextSemester =
-    Number(semester) + 1;
+const nextSemester =
+Number(semester) + 1;
 
-    db.query(
-      `
-      SELECT *
-      FROM curriculum
-      WHERE semester=?
-      `,
-      [nextSemester],
-      (err, plannedRows)=>{
+db.query(
+`
+SELECT *
+FROM curriculum
+ORDER BY semester,id
+`,
+(err,plannedRows)=>{
 
         if(err){
 
@@ -894,7 +884,23 @@ else if(
 
 const passedSubjects = [];
 const failedSubjects = [];
+const studiedSubjects=[];
 
+rows.forEach(r=>{
+
+    studiedSubjects.push(r.subject_code);
+
+    if(Number(r.total)>=5){
+
+        passedSubjects.push(r.subject_code);
+
+    }else{
+
+        failedSubjects.push(r.subject_code);
+
+    }
+
+});
 rows.forEach(r=>{
 
   if(Number(r.total) >= 5){
