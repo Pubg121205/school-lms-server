@@ -844,7 +844,46 @@ else if(
 
 
 
-      
+      app.put("/student-semester/:id",(req,res)=>{
+
+    const id=req.params.id;
+
+    const {
+        current_semester
+    }=req.body;
+
+    db.query(
+
+        `
+        UPDATE users
+        SET current_semester=?
+        WHERE id=?
+        `,
+
+        [
+            current_semester,
+            id
+        ],
+
+        err=>{
+
+            if(err){
+
+                return res.status(500).json({
+                    msg:err.message
+                });
+
+            }
+
+            res.json({
+                msg:"Đã cập nhật học kỳ"
+            });
+
+        }
+
+    );
+
+});
 
   
   
