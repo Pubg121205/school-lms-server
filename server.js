@@ -63,11 +63,10 @@ app.post("/login", (req, res) => {
 });
 
 /* STUDENTS */
-
 app.get("/students", (req, res) => {
 
   db.query(
-    "SELECT * FROM rs WHERE role='student'",
+    "SELECT * FROM users WHERE role='student'",
     (err, rows) => {
 
       if (err) {
