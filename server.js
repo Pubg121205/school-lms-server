@@ -111,8 +111,7 @@ app.get("/curriculum/all", (req,res)=>{
 
 });
 /* CREATE STUDENT */
-
-app.post("/admin/r", (req, res) => {
+app.post("/admin/user", (req, res) => {
 
   const {
     full_name,
@@ -122,8 +121,7 @@ app.post("/admin/r", (req, res) => {
   } = req.body;
 
   db.query(
-    `
-    INSERT INTO users
+    `INSERT INTO users
     (
       full_name,
       username,
@@ -133,13 +131,8 @@ app.post("/admin/r", (req, res) => {
     )
     VALUES
     (
-      ?,
-      ?,
-      ?,
-      'student',
-      ?
-    )
-    `,
+      ?,?,?, 'student', ?
+    )`,
     [
       full_name,
       username,
@@ -148,14 +141,14 @@ app.post("/admin/r", (req, res) => {
     ],
     err => {
 
-      if (err) {
+      if(err){
         return res.status(500).json({
           msg: err.message
         });
       }
 
       res.json({
-        msg: "Tạo sinh viên thành công"
+        msg:"Tạo sinh viên thành công"
       });
 
     }
