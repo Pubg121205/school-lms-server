@@ -920,57 +920,109 @@ rows.forEach(r=>{
 });
 
         let canLearn = [];
-        let cannotLearn = [];
-        let retakeSubjects = [];
+let prioritySubjects=[];
+
+let normalSubjects=[];
+
+let improveSubjects=[];
+
+let cannotLearn=[];
+
+let totalCredit=0;
 
 
 plannedRows.forEach(subject=>{
 
-  if(
-    failedSubjects.includes(
-      subject.subject_name
-    )
-  ){
+    const code=subject.subject_code;
 
-    retakeSubjects.push(
-      subject.subject_name
-    );
-  }
+    const credit=Number(subject.credit);
 
-  if(
-    !subject.prerequisite_subject
-  ){
+    const opens=
+    subject.open_semester
+    .split(",");
 
-    canLearn.push(
-      subject.subject_name
-    );
-
-  }else{
+    // kỳ hiện tại có mở không
 
     if(
-      passedSubjects.includes(
-        subject.prerequisite_subject
-      )
+        !opens.includes(String(nextSemester))
+    ){
+        return;
+    }
+
+    //------------------------------------------------
+    // 1. MÔN TIÊN QUYẾT CHƯA HỌC
+    //------------------------------------------------
+
+    if(subject.prerequisite_subject){
+
+        if(
+            !passedSubjects.includes(
+                subject.prerequisite_subject
+            )
+        ){
+
+            cannotLearn.push(subject);
+
+            return;
+        }
+    }
+
+    //------------------------------------------------
+    // 2. CHƯA HỌC BAO GIỜ
+    //------------------------------------------------
+
+    if(
+        !studiedSubjects.includes(code)
     ){
 
-      canLearn.push(
-        subject.subject_name
-      );
+        normalSubjects.push(subject);
 
-    }else{
+        return;
+    }
 
-      cannotLearn.push(
-        `${subject.subject_name}
-       (thiếu môn tiên quyết:
-       ${subject.prerequisite_subject})`
-      );
+    //------------------------------------------------
+    // 3. HỌC RỒI NHƯNG ĐIỂM THẤP
+    //------------------------------------------------
+
+    const score=
+    rows.find(r=>r.subject_code==code);
+
+    if(score && score.total<6.5){
+
+        improveSubjects.push(subject);
 
     }
 
-  }
+});
+
+
+let recommend=[];
+
+recommend=[
+    ...prioritySubjects,
+    ...normalSubjects,
+    ...improveSubjects
+];
+
+
+let finalRecommend=[];
+
+let creditSum=0;
+
+recommend.forEach(sub=>{
+
+    if(
+        creditSum+Number(sub.credit)<=22
+    ){
+
+        finalRecommend.push(sub);
+
+        creditSum+=Number(sub.credit);
+
+    }
 
 });
-       
+  
 
         
 
@@ -992,9 +1044,30 @@ plannedRows.forEach(subject=>{
 
         if(canLearn.length){
 
-          answer +=
-          "- " +
-          canLearn.join("\n- ");
+answer="";
+
+answer+="Đề xuất đăng ký:\n\n";
+
+finalRecommend.forEach(sub=>{
+
+    answer+=
+    `• ${sub.subject_code} - ${sub.subject_name}
+(${sub.credit} TC)\n`;
+
+});
+
+answer+=
+`\nTổng số tín chỉ: ${creditSum}`;
+
+          answer+="\n\nLý do đề xuất:\n";
+
+answer+="- Hoàn thành môn tiên quyết trước\n";
+
+answer+="- Ưu tiên môn chưa học\n";
+
+answer+="- Sau đó cải thiện các môn điểm thấp\n";
+
+answer+="- Không vượt quá 22 tín chỉ";
 
         }else{
 
