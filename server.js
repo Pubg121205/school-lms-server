@@ -191,16 +191,25 @@ app.get("/scores/:userId/:semester", (req, res) => {
 
 app.post("/admin/score", (req, res) => {
 
-  const {
+const {
+
     user_id,
+
     semester,
+
     subject_code,
-    subject,
+
+    subject_name,
+
     credit,
+
     attendance,
+
     mid,
+
     final
-  } = req.body;
+
+}=req.body;
 
   const total =
     attendance * 0.1 +
@@ -223,16 +232,17 @@ INSERT INTO scores
 )
 VALUES (?,?,?,?,?,?,?,?,?)
 `,
-    [
-      user_id,
-      semester,
-      subject,
-      credit,
-      attendance,
-      mid,
-      final,
-      total.toFixed(2)
-    ],
+[
+    user_id,
+    semester,
+    subject_code,
+    subject_name,
+    credit,
+    attendance,
+    mid,
+    final,
+    total.toFixed(2)
+],
     err => {
 
       if (err) {
