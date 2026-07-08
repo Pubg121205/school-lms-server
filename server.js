@@ -194,6 +194,7 @@ app.post("/admin/score", (req, res) => {
   const {
     user_id,
     semester,
+    subject_code,
     subject,
     credit,
     attendance,
