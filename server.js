@@ -208,23 +208,21 @@ app.post("/admin/score", (req, res) => {
     final * 0.6;
 
   db.query(
-    `
-    INSERT INTO scores
-    (
-      user_id,
-      semester,
-      subject,
-      credit,
-      attendance,
-      mid,
-      final,
-      total
-    )
-    VALUES
-    (
-      ?,?,?,?,?,?,?,?
-    )
-    `,
+`
+INSERT INTO scores
+(
+    user_id,
+    semester,
+    subject_code,
+    subject,
+    credit,
+    attendance,
+    mid,
+    final,
+    total
+)
+VALUES (?,?,?,?,?,?,?,?,?)
+`,
     [
       user_id,
       semester,
