@@ -654,7 +654,70 @@ app.get("/curriculum/:semester",(req,res)=>{
 });
 
   
-  
+  app.post("/scores", (req, res) => {
+
+    const {
+        student_id,
+        semester,
+        subject_code,
+        subject_name,
+        credit,
+        attendance,
+        mid,
+        final
+    } = req.body;
+
+    const total =
+        attendance * 0.1 +
+        mid * 0.3 +
+        final * 0.6;
+
+    db.query(
+        `
+        INSERT INTO scores
+        (
+            student_id,
+            semester,
+            subject_code,
+            subject,
+            credit,
+            attendance,
+            mid,
+            final,
+            total
+        )
+        VALUES(?,?,?,?,?,?,?,?,?)
+        `,
+        [
+            student_id,
+            semester,
+            subject_code,
+            subject_name,
+            credit,
+            attendance,
+            mid,
+            final,
+            total
+        ],
+        (err) => {
+
+            if(err){
+
+                return res.status(500).json({
+                    msg: err.message
+                });
+
+            }
+
+            res.json({
+                msg:"Đã thêm môn"
+            });
+
+        }
+
+    );
+
+});
 
 
 /* AI ADVICE */
