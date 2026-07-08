@@ -1084,7 +1084,8 @@ else if(
                             return;
                         }
 
-                        // Đã qua rồiif(
+                        // Đã qua rồi
+                      if(
     passedCodes.includes(subject.subject_code)
 ){
 
