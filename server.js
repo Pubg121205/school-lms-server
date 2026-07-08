@@ -1064,7 +1064,6 @@ let normalSubjects=[];
 
 let improveSubjects=[];
 
-let prioritySubjects=[];
 
 let canLearn=[];
 
