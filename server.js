@@ -990,7 +990,7 @@ db.query(
 `
 SELECT *
 FROM curriculum
-ORDER BY semester,id
+
 `,
 (err,plannedRows)=>{
 
@@ -1046,14 +1046,19 @@ rows.forEach(r=>{
 
 });
 
-        let canLearn = [];
 let prioritySubjects=[];
 
 let normalSubjects=[];
 
 let improveSubjects=[];
 
+let prioritySubjects=[];
+
+let canLearn=[];
+
 let cannotLearn=[];
+
+let retakeSubjects=[];
 
 let totalCredit=0;
 
