@@ -983,13 +983,25 @@ else if(
     question.includes("môn nào")
 ){
 
+db.query(
+`
+SELECT current_semester
+FROM users
+WHERE id=?
+`,
+[userId],
+(err,userRows)=>{
+  const currentSemester =
+Number(userRows[0].current_semester);
+
 const nextSemester =
-Number(semester) + 1;
+currentSemester+1;
 
 db.query(
 `
 SELECT *
 FROM curriculum
+ORDER BY semester
 
 `,
 (err,plannedRows)=>{
@@ -1063,70 +1075,138 @@ let retakeSubjects=[];
 let totalCredit=0;
 
 
-plannedRows.forEach(subject=>{
+let recommend=[];
 
-    const code=subject.subject_code;
-
-    const credit=Number(subject.credit);
-
-    const opens=
-    subject.open_semesters
-    .split(",");
-
-    // kỳ hiện tại có mở không
+prioritySubjects.forEach(s=>{
 
     if(
-        !opens.includes(String(nextSemester))
-    ){
-        return;
-    }
-
-    //------------------------------------------------
-    // 1. MÔN TIÊN QUYẾT CHƯA HỌC
-    //------------------------------------------------
-
-    if(subject.prerequisite_subject){
-
-        if(
-            !passedSubjects.includes(
-                subject.prerequisite_subject
-            )
-        ){
-
-            cannotLearn.push(subject);
-
-            return;
-        }
-    }
-
-    //------------------------------------------------
-    // 2. CHƯA HỌC BAO GIỜ
-    //------------------------------------------------
-
-    if(
-        !studiedSubjects.includes(code)
+        totalCredit+s.credit
+        <=22
     ){
 
-        normalSubjects.push(subject);
+        recommend.push(s.subject);
 
-        return;
-    }
-
-    //------------------------------------------------
-    // 3. HỌC RỒI NHƯNG ĐIỂM THẤP
-    //------------------------------------------------
-
-    const score=
-    rows.find(r=>r.subject_code==code);
-
-    if(score && score.total<6.5){
-
-        improveSubjects.push(subject);
+        totalCredit+=s.credit;
 
     }
 
 });
 
+normalSubjects.forEach(subject=>{
+
+    if(
+        totalCredit+
+        Number(subject.credit)
+        <=22
+    ){
+
+        recommend.push(subject);
+
+        totalCredit+=
+        Number(subject.credit);
+
+    }
+
+});
+
+
+  
+plannedRows.forEach(subject=>{
+
+    const openList =
+        subject.open_semesters
+        ? subject.open_semesters.split(",")
+        : [];
+
+    // HK tới không mở
+    if(
+        !openList.includes(
+            String(nextSemester)
+        )
+    ){
+        return;
+    }
+
+    const passed =
+        passedSubjects.includes(
+            subject.subject_name
+        );
+
+    const failed =
+        failedSubjects.includes(
+            subject.subject_name
+        );
+
+    // Đã học rồi
+    if(passed){
+        return;
+    }
+
+    // Học lại
+    if(failed){
+
+        prioritySubjects.push({
+
+            type:"retake",
+
+            credit:Number(subject.credit),
+
+            subject
+
+        });
+
+        return;
+
+    }
+
+    // Môn còn nợ
+    if(
+        Number(subject.semester)
+        <
+        currentSemester
+    ){
+
+        prioritySubjects.push({
+
+            type:"missing",
+
+            credit:Number(subject.credit),
+
+            subject
+
+        });
+
+        return;
+
+    }
+
+    // Không có tiên quyết
+    if(
+        !subject.prerequisite_subject
+    ){
+
+        normalSubjects.push(subject);
+
+        return;
+
+    }
+
+    // Có tiên quyết
+    if(
+        passedSubjects.includes(
+            subject.prerequisite_subject
+        )
+    ){
+
+        normalSubjects.push(subject);
+
+    }else{
+
+        cannotLearn.push(subject);
+
+    }
+
+});
 
 let recommend=[];
 
@@ -1178,19 +1258,20 @@ recommend.forEach(sub=>{
 
 answer="";
 
-answer+="Đề xuất đăng ký:\n\n";
+answer+=
+`Đề xuất đăng ký HK${nextSemester}\n\n`;
 
-finalRecommend.forEach(sub=>{
+recommend.forEach(subject=>{
 
     answer+=
-    `• ${sub.subject_code} - ${sub.subject_name}
-(${sub.credit} TC)\n`;
+`• ${subject.subject_code}
+- ${subject.subject_name}
+(${subject.credit} TC)\n`;
 
 });
 
 answer+=
-`\nTổng số tín chỉ: ${creditSum}`;
-
+`\nTổng tín chỉ: ${totalCredit}/22`;
           answer+="\n\nLý do đề xuất:\n";
 
 answer+="- Hoàn thành môn tiên quyết trước\n";
