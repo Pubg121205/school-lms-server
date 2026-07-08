@@ -580,7 +580,7 @@ app.delete("/curriculum/:id",(req,res)=>{
 
 });
 
-
+//////
 
 app.get("/curriculum/:semester",(req,res)=>{
 
@@ -717,7 +717,7 @@ app.get("/curriculum/:semester",(req,res)=>{
     );
 
 });
-
+/////
 
 /* AI ADVICE */
 
@@ -728,9 +728,10 @@ app.get("/advice/:userId/:semester", (req, res) => {
 
   db.query(
     `
-    SELECT *
-    FROM scores
-    WHERE user_id=?
+SELECT *
+FROM scores
+WHERE student_id=?
+ORDER BY semester
     
     `,
     
@@ -973,7 +974,7 @@ else if(
     }
 }
 
-
+///////
 
 /* KỲ TỚI HỌC GÌ */
 
@@ -983,282 +984,291 @@ else if(
     question.includes("môn nào")
 ){
 
-db.query(
-`
-SELECT current_semester
-FROM users
-WHERE id=?
-`,
-[userId],
-(err,userRows)=>{
-  const currentSemester =
-Number(userRows[0].current_semester);
+    db.query(
+        `
+        SELECT current_semester
+        FROM users
+        WHERE id=?
+        `,
+        [userId],
+        (err,userRows)=>{
 
-const nextSemester =
-currentSemester+1;
+            if(err){
+                return res.json({
+                    advice:"Không lấy được học kỳ hiện tại."
+                });
+            }
 
-db.query(
-`
-SELECT *
-FROM curriculum
-ORDER BY semester
+            const currentSemester =
+                Number(userRows[0].current_semester);
 
-`,
-(err,plannedRows)=>{
+            const nextSemester =
+                currentSemester + 1;
 
-        if(err){
+            db.query(
+                `
+                SELECT *
+                FROM curriculum
+                ORDER BY semester,id
+                `,
+                (err,plannedRows)=>{
 
-          return res.json({
-            advice:"Không lấy được môn dự kiến."
-          });
-        }
+                    if(err){
 
-        if(plannedRows.length === 0){
+                        return res.json({
+                            advice:"Không lấy được chương trình đào tạo."
+                        });
 
-          return res.json({
-            advice:
-            `Chưa có dữ liệu môn mở cho học kỳ ${nextSemester}.`
-          });
-        }
+                    }
 
-const passedSubjects = [];
-const failedSubjects = [];
-const studiedSubjects=[];
+                    if(plannedRows.length===0){
 
-rows.forEach(r=>{
+                        return res.json({
+                            advice:"Chưa có dữ liệu CTĐT."
+                        });
 
-    studiedSubjects.push(r.subject_code);
+                    }
 
-    if(Number(r.total)>=5){
+                    //==========================
+                    // MÔN ĐÃ HỌC
+                    //==========================
 
-        passedSubjects.push(r.subject_code);
+                    let passedCodes=[];
+                    let failedCodes=[];
+                    let weakCodes=[];
 
-    }else{
+                    rows.forEach(r=>{
 
-        failedSubjects.push(r.subject_code);
+                        if(Number(r.total)>=5){
 
-    }
+                            passedCodes.push(r.subject_code);
 
-});
-rows.forEach(r=>{
+                        }else{
 
-  if(Number(r.total) >= 5){
+                            failedCodes.push(r.subject_code);
 
-    passedSubjects.push(
-      r.subject
-    );
+                        }
 
-  }else{
+                        if(
+                            Number(r.total)>=5 &&
+                            Number(r.total)<7
+                        ){
+                            weakCodes.push(r.subject_code);
+                        }
 
-    failedSubjects.push(
-      r.subject
-    );
+                    });
 
-  }
+                    //==========================
+                    // DANH SÁCH ĐỀ XUẤT
+                    //==========================
 
-});
+                    let prioritySubjects=[];
+                    let normalSubjects=[];
+                    let improveSubjects=[];
+                    let cannotLearn=[];
+                    let retakeSubjects=[];
 
-let prioritySubjects=[];
+                    plannedRows.forEach(subject=>{
 
-let normalSubjects=[];
+                        // HK tới có mở không
+                        const openList =
+                            subject.open_semesters
+                            ? subject.open_semesters.split(",")
+                            : [];
 
-let improveSubjects=[];
+                        if(
+                            !openList.includes(
+                                String(nextSemester)
+                            )
+                        ){
+                            return;
+                        }
 
+                        // Đã qua rồiif(
+    passedCodes.includes(subject.subject_code)
+){
 
-let canLearn=[];
-
-let cannotLearn=[];
-
-let retakeSubjects=[];
-
-let totalCredit=0;
-
-
-let recommend=[];
-
-prioritySubjects.forEach(s=>{
-
+    // điểm thấp thì học cải thiện
     if(
-        totalCredit+s.credit
-        <=22
+        weakCodes.includes(subject.subject_code)
     ){
 
-        recommend.push(s.subject);
-
-        totalCredit+=s.credit;
+        improveSubjects.push(subject);
 
     }
 
-});
-
-normalSubjects.forEach(subject=>{
-
-    if(
-        totalCredit+
-        Number(subject.credit)
-        <=22
-    ){
-
-        recommend.push(subject);
-
-        totalCredit+=
-        Number(subject.credit);
-
-    }
-
-});
-
-
-plannedRows.forEach(subject=>{
-
-    // HK tới có mở môn không
-    const openList = subject.open_semesters
-        ? subject.open_semesters.split(",")
-        : [];
-
-    if(!openList.includes(String(nextSemester))){
-        return;
-    }
-
-    // Đã học rồi thì bỏ qua
-    if(passedSubjects.includes(subject.subject_name)){
-        return;
-    }
-
-    // Học lại
-    if(failedSubjects.includes(subject.subject_name)){
-
-        prioritySubjects.push(subject);
-        return;
-
-    }
-
-    // Môn còn nợ
-    if(Number(subject.semester) < currentSemester){
-
-        prioritySubjects.push(subject);
-        return;
-
-    }
-
-    // Kiểm tra môn tiên quyết
-    if(subject.prerequisite_subject){
-
-        if(
-            !passedSubjects.includes(subject.prerequisite_subject)
-        ){
-
-            cannotLearn.push(subject);
-            return;
-
-        }
-
-    }
-
-    // Môn học bình thường
-    normalSubjects.push(subject);
-
-});
-
-
-// Ghép danh sách ưu tiên
-let recommend = [
-
-    ...prioritySubjects,
-
-    ...normalSubjects
-
-];
-
-
-// Chọn tối đa 22 tín
-let finalRecommend = [];
-
-let creditSum = 0;
-
-recommend.forEach(subject=>{
-
-    const tc = Number(subject.credit);
-
-    if(creditSum + tc <= 22){
-
-        finalRecommend.push(subject);
-
-        creditSum += tc;
-
-    }
-
-});
-
-
-//================== TẠO CÂU TRẢ LỜI ==================
-
-let answer = "";
-
-if(retakeSubjects.length){
-
-    answer += "Các môn nên học lại:\n";
-
-    retakeSubjects.forEach(name=>{
-
-        answer += "• " + name + "\n";
-
-    });
-
-    answer += "\n";
+    return;
 
 }
 
-answer += `Đề xuất đăng ký HK${nextSemester}\n\n`;
+                        // Học lại
+                        if(
+                            failedCodes.includes(subject.subject_code)
+                        ){
 
-if(finalRecommend.length){
+                            prioritySubjects.push(subject);
 
-    finalRecommend.forEach(subject=>{
+                            retakeSubjects.push(subject.subject_name);
+                            return;
 
-        answer +=
+                        }
+
+                        // Môn còn nợ
+                        if(
+                            Number(subject.semester)<currentSemester
+                        ){
+
+                            prioritySubjects.push(subject);
+                            return;
+
+                        }
+
+                        // Có tiên quyết
+if(subject.prerequisite_subject){
+
+    const preList =
+        subject.prerequisite_subject
+        .split(",");
+
+    const ok =
+        preList.every(code =>
+            passedCodes.includes(code.trim())
+        );
+
+    if(!ok){
+
+        cannotLearn.push(subject);
+        return;
+
+    }
+
+}
+
+                        normalSubjects.push(subject);
+
+                    });
+
+                    //==========================
+                    // GHÉP DANH SÁCH
+                    //==========================
+
+let recommend=[];
+
+recommend.push(...prioritySubjects);
+
+recommend.push(...normalSubjects);
+
+recommend.push(...improveSubjects);
+
+                    //==========================
+                    // GIỚI HẠN 22 TC
+                    //==========================
+
+let finalRecommend=[];
+
+let creditSum=0;
+
+for(const subject of recommend){
+
+    const tc=Number(subject.credit);
+
+    if(creditSum+tc>22){
+
+        continue;
+
+    }
+
+    finalRecommend.push(subject);
+
+    creditSum+=tc;
+
+}
+
+                    //==========================
+                    // TẠO CÂU TRẢ LỜI
+                    //==========================
+
+                    let answer=
+`Đề xuất đăng ký học kỳ ${nextSemester}
+
+`;
+                  if(retakeSubjects.length){
+
+    answer+="Các môn nên học lại:\n";
+
+    retakeSubjects.forEach(name=>{
+
+        answer+="• "+name+"\n";
+
+    });
+
+    answer+="\n";
+
+}
+
+                    if(finalRecommend.length){
+
+                        finalRecommend.forEach(subject=>{
+
+                            answer+=
 `• ${subject.subject_code}
 - ${subject.subject_name}
 (${subject.credit} tín chỉ)
 
 `;
 
-    });
+                        });
 
-    answer += `Tổng tín chỉ: ${creditSum}/22\n\n`;
-
-    answer += "Lý do đề xuất:\n";
-    answer += "- Ưu tiên môn còn nợ\n";
-    answer += "- Ưu tiên học lại môn trượt\n";
-    answer += "- Hoàn thành môn tiên quyết\n";
-    answer += "- Sau đó học đúng CTĐT\n";
-
-}else{
-
-    answer += "Không có môn phù hợp để đăng ký.";
-
-}
-
-if(cannotLearn.length){
-
-    answer += "\nCác môn chưa đủ điều kiện:\n";
-
-    cannotLearn.forEach(subject=>{
-
-        answer +=
-`• ${subject.subject_name}
-(Thiếu môn tiên quyết: ${subject.prerequisite_subject})
+                        answer+=
+`Tổng tín chỉ: ${creditSum}/22
 
 `;
 
-    });
+                        answer+=
+`Lý do đề xuất:
+- Ưu tiên môn còn nợ.
+- Ưu tiên học lại môn trượt.
+- Hoàn thành môn tiên quyết.
+- Sau đó học các môn đúng CTĐT.
+- Cuối cùng mới học cải thiện.
+`;
+
+                    }else{
+
+                        answer+="Không có môn phù hợp.\n";
+
+                    }
+
+                    if(cannotLearn.length){
+
+                        answer+="\nCác môn chưa đủ điều kiện:\n";
+
+                        cannotLearn.forEach(subject=>{
+
+answer+=
+`• ${subject.subject_code} - ${subject.subject_name}
+Thiếu tiên quyết:
+${subject.prerequisite_subject}
+
+`;
+
+                        });
+
+                    }
+
+                    return res.json({
+                        advice:answer
+                    });
+
+                }
+            );
+
+        }
+    );
+
+    return;
 
 }
-
-return res.json({
-
-    advice: answer
-
-});
 /* TỐT NGHIỆP */
 
 else if(
