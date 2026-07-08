@@ -236,7 +236,7 @@ VALUES (?,?,?,?,?,?,?,?,?)
     user_id,
     semester,
     subject_code,
-    subject_name,
+    subject,
     credit,
     attendance,
     mid,
