@@ -1109,201 +1109,156 @@ normalSubjects.forEach(subject=>{
 });
 
 
-  
 plannedRows.forEach(subject=>{
 
-    const openList =
-        subject.open_semesters
+    // HK tới có mở môn không
+    const openList = subject.open_semesters
         ? subject.open_semesters.split(",")
         : [];
 
-    // HK tới không mở
-    if(
-        !openList.includes(
-            String(nextSemester)
-        )
-    ){
+    if(!openList.includes(String(nextSemester))){
         return;
     }
 
-    const passed =
-        passedSubjects.includes(
-            subject.subject_name
-        );
-
-    const failed =
-        failedSubjects.includes(
-            subject.subject_name
-        );
-
-    // Đã học rồi
-    if(passed){
+    // Đã học rồi thì bỏ qua
+    if(passedSubjects.includes(subject.subject_name)){
         return;
     }
 
     // Học lại
-    if(failed){
+    if(failedSubjects.includes(subject.subject_name)){
 
-        prioritySubjects.push({
-
-            type:"retake",
-
-            credit:Number(subject.credit),
-
-            subject
-
-        });
-
+        prioritySubjects.push(subject);
         return;
 
     }
 
     // Môn còn nợ
-    if(
-        Number(subject.semester)
-        <
-        currentSemester
-    ){
+    if(Number(subject.semester) < currentSemester){
 
-        prioritySubjects.push({
-
-            type:"missing",
-
-            credit:Number(subject.credit),
-
-            subject
-
-        });
-
+        prioritySubjects.push(subject);
         return;
 
     }
 
-    // Không có tiên quyết
-    if(
-        !subject.prerequisite_subject
-    ){
+    // Kiểm tra môn tiên quyết
+    if(subject.prerequisite_subject){
 
-        normalSubjects.push(subject);
+        if(
+            !passedSubjects.includes(subject.prerequisite_subject)
+        ){
 
-        return;
+            cannotLearn.push(subject);
+            return;
 
-    }
-
-    // Có tiên quyết
-    if(
-        passedSubjects.includes(
-            subject.prerequisite_subject
-        )
-    ){
-
-        normalSubjects.push(subject);
-
-    }else{
-
-        cannotLearn.push(subject);
+        }
 
     }
+
+    // Môn học bình thường
+    normalSubjects.push(subject);
 
 });
 
 
+// Ghép danh sách ưu tiên
+let recommend = [
 
-recommend=[
     ...prioritySubjects,
-    ...normalSubjects,
-    ...improveSubjects
+
+    ...normalSubjects
+
 ];
 
 
-let finalRecommend=[];
+// Chọn tối đa 22 tín
+let finalRecommend = [];
 
-let creditSum=0;
+let creditSum = 0;
 
-recommend.forEach(sub=>{
+recommend.forEach(subject=>{
 
-    if(
-        creditSum+Number(sub.credit)<=22
-    ){
+    const tc = Number(subject.credit);
 
-        finalRecommend.push(sub);
+    if(creditSum + tc <= 22){
 
-        creditSum+=Number(sub.credit);
+        finalRecommend.push(subject);
+
+        creditSum += tc;
 
     }
 
 });
-  
-
-        
-
-        let answer ="";
 
 
-        if(retakeSubjects.length){
+//================== TẠO CÂU TRẢ LỜI ==================
 
-  answer +=
-  "Các môn nên học lại:\n- " +
-  retakeSubjects.join("\n- ");
+let answer = "";
 
-  answer += "\n\n";
+if(retakeSubjects.length){
+
+    answer += "Các môn nên học lại:\n";
+
+    retakeSubjects.forEach(name=>{
+
+        answer += "• " + name + "\n";
+
+    });
+
+    answer += "\n";
+
 }
 
+answer += `Đề xuất đăng ký HK${nextSemester}\n\n`;
+
+if(finalRecommend.length){
+
+    finalRecommend.forEach(subject=>{
 
         answer +=
-`Các môn có thể đăng ký HK${nextSemester}:\n`;
-
-        if(canLearn.length){
-
-answer="";
-
-answer+=
-`Đề xuất đăng ký HK${nextSemester}\n\n`;
-
-recommend.forEach(subject=>{
-
-    answer+=
 `• ${subject.subject_code}
 - ${subject.subject_name}
-(${subject.credit} TC)\n`;
+(${subject.credit} tín chỉ)
 
-});
+`;
 
-answer+=
-`\nTổng tín chỉ: ${totalCredit}/22`;
-          answer+="\n\nLý do đề xuất:\n";
+    });
 
-answer+="- Hoàn thành môn tiên quyết trước\n";
+    answer += `Tổng tín chỉ: ${creditSum}/22\n\n`;
 
-answer+="- Ưu tiên môn chưa học\n";
+    answer += "Lý do đề xuất:\n";
+    answer += "- Ưu tiên môn còn nợ\n";
+    answer += "- Ưu tiên học lại môn trượt\n";
+    answer += "- Hoàn thành môn tiên quyết\n";
+    answer += "- Sau đó học đúng CTĐT\n";
 
-answer+="- Sau đó cải thiện các môn điểm thấp\n";
+}else{
 
-answer+="- Không vượt quá 22 tín chỉ";
+    answer += "Không có môn phù hợp để đăng ký.";
 
-        }else{
-
-          answer +=
-          "Chưa có môn nào đủ điều kiện.";
-        }
-
-        if(cannotLearn.length){
-
-          answer +=
-          "\n\nCác môn chưa đủ điều kiện:\n- " +
-          cannotLearn.join("\n- ");
-        }
-
-        return res.json({
-          advice: answer
-        });
-
-      }
-    );
-
-    return;
 }
 
+if(cannotLearn.length){
+
+    answer += "\nCác môn chưa đủ điều kiện:\n";
+
+    cannotLearn.forEach(subject=>{
+
+        answer +=
+`• ${subject.subject_name}
+(Thiếu môn tiên quyết: ${subject.prerequisite_subject})
+
+`;
+
+    });
+
+}
+
+return res.json({
+
+    advice: answer
+
+});
 /* TỐT NGHIỆP */
 
 else if(
