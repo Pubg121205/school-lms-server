@@ -582,7 +582,32 @@ app.delete("/curriculum/:id",(req,res)=>{
 
 
 
+app.get("/curriculum/:semester",(req,res)=>{
 
+    const semester=req.params.semester;
+
+    db.query(
+        `
+        SELECT *
+        FROM curriculum
+        WHERE semester=?
+        ORDER BY subject_code
+        `,
+        [semester],
+        (err,rows)=>{
+
+            if(err){
+                return res.status(500).json({
+                    msg:err.message
+                });
+            }
+
+            res.json(rows);
+
+        }
+    );
+
+});
 
 
 
