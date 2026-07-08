@@ -86,13 +86,14 @@ app.get("/curriculum/all", (req,res)=>{
 
     db.query(
         `
-        SELECT
-            subject_code,
-            subject_name,
-            credit,
-            semester,
-            open_semester
-        FROM curriculum
+SELECT
+subject_code,
+subject_name,
+credit,
+open_semesters,
+prerequisite_subject,
+is_required
+FROM curriculum
         ORDER BY subject_code
         `,
         (err,rows)=>{
@@ -1002,7 +1003,7 @@ plannedRows.forEach(subject=>{
     const credit=Number(subject.credit);
 
     const opens=
-    subject.open_semester
+    subject.open_semesters
     .split(",");
 
     // kỳ hiện tại có mở không
