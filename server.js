@@ -1207,7 +1207,7 @@ plannedRows.forEach(subject=>{
 
 });
 
-let recommend=[];
+
 
 recommend=[
     ...prioritySubjects,
