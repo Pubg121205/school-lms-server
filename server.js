@@ -774,7 +774,12 @@ rows.forEach(row => {
         totalCredit += credit;
 
         if(score < 5){
-          failedSubjects.push(row.subject);
+          failedSubjects.push({
+            subject_code: row.subject_code,
+            subject_name: row.subject,
+            credit: row.credit,
+            total: row.total
+});
         }
 
         if(score < 6.5){
@@ -1242,6 +1247,17 @@ if(improveSubjects.length){
 
     answer += "=== MÔN NÊN HỌC CẢI THIỆN ===\n\n";
 
+improveSubjects.forEach(subject => {
+
+    if (totalCredit + Number(subject.credit) <= 22) {
+
+        suggested.push(subject);
+        totalCredit += Number(subject.credit);
+
+    }
+
+});
+  
     improveSubjects.forEach(subject=>{
 
         answer +=
@@ -1251,7 +1267,7 @@ if(improveSubjects.length){
 
 `;
 
-    });
+    });////
 
 }
 
