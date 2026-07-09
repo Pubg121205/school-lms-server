@@ -1243,7 +1243,8 @@ if(finalRecommend.length){
 //==============================
 // 3. MÔN CẢI THIỆN
 //==============================
-
+console.log("Improve:", improveSubjects);
+console.log("Length:", improveSubjects.length);
 if(improveSubjects.length){
 
     answer += "=== MÔN NÊN HỌC CẢI THIỆN ===\n\n";
