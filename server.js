@@ -1239,7 +1239,19 @@ if(finalRecommend.length){
 
 }
 
+answer += "\n=== MÔN NÊN HỌC CẢI THIỆN ===\n\n";
 
+if (weakSubjects.length) {
+
+    weakSubjects.forEach(subject => {
+        answer += `• ${subject}\n`;
+    });
+
+} else {
+
+    answer += "Không có môn cần cải thiện.\n";
+
+}
 //==============================
 // 3. MÔN CẢI THIỆN
 //==============================
