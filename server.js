@@ -639,7 +639,7 @@ app.get("/curriculum/:semester",(req,res)=>{
   app.post("/scores", (req, res) => {
 
     const {
-        student_id,
+        user_id,
         semester,
         subject_code,
         subject_name,
@@ -658,7 +658,7 @@ app.get("/curriculum/:semester",(req,res)=>{
         `
         INSERT INTO scores
         (
-            student_id,
+            user_id,
             semester,
             subject_code,
             subject,
@@ -671,7 +671,7 @@ app.get("/curriculum/:semester",(req,res)=>{
         VALUES(?,?,?,?,?,?,?,?,?)
         `,
         [
-            student_id,
+            user_id,
             semester,
             subject_code,
             subject_name,
@@ -755,24 +755,7 @@ rows.forEach(row => {
       const failedSubjects = [];
       const weakSubjects = [];
 
-  failedSubjects.forEach(subject => {
 
-    if (totalCredit >= 22) return;
-
-    if (totalCredit + Number(subject.credit) <= 22) {
-
-        suggested.push({
-            subject_code: subject.subject_code,
-            subject_name: subject.subject_name,
-            credit: Number(subject.credit),
-            total: Number(row.total)
-        });
-
-        totalCredit += Number(subject.credit);
-
-    }
-
-});
 
       rows.forEach(row => {
 
@@ -1132,7 +1115,7 @@ else if(
 
                             prioritySubjects.push(subject);
 
-                            retakeSubjects.push(subject.subject);
+                            retakeSubjects.push(subject);
                             return;
 
                         }
@@ -1182,7 +1165,6 @@ recommend.push(...prioritySubjects);
 
 recommend.push(...normalSubjects);
 
-recommend.push(...improveSubjects);
 
                     //==========================
                     // GIỚI HẠN 22 TC
@@ -1209,12 +1191,12 @@ for(const subject of recommend){
 }
 
                   // Nếu chưa đủ 22 TC thì thêm môn học lại
-for (const subject of prioritySubjects) {
+// Nếu chưa đủ 22 TC thì thêm môn học lại còn thiếu
+for (const subject of plannedRows) {
 
-    // chỉ lấy môn học lại
-    if (!failedCodes.includes(subject.subject_code)) continue;
+    if (!failedCodes.includes(subject.subject_code))
+        continue;
 
-    // tránh trùng
     if (finalRecommend.some(s => s.subject_code === subject.subject_code))
         continue;
 
@@ -1229,33 +1211,11 @@ for (const subject of prioritySubjects) {
     if (creditSum >= 22)
         break;
 }
-
                     //==========================
                     // TẠO CÂU TRẢ LỜI
                     //==========================
 let answer = `Đề xuất đăng ký học kỳ ${nextSemester}\n\n`;
 
-
-//==============================
-// 1. MÔN HỌC LẠI
-//==============================
-
-if(retakeSubjects.length){
-
-    answer += "=== MÔN HỌC LẠI ===\n\n";
-
-    retakeSubjects.forEach(subject=>{
-
-        answer +=
-`• ${subject.subject_code}
-- ${subject.subject_name}
-(${subject.credit} tín chỉ)
-
-`;
-
-    });
-
-}
 
 
 //==============================
