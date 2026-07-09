@@ -721,11 +721,15 @@ ORDER BY semester
     [userId],
     (err, rows) => {
 
-      if (err) {
-        return res.json({
-          advice: "Lỗi hệ thống"
-        });
-      }
+if(err){
+
+    console.log(err);
+
+    return res.json({
+        advice: err.message
+    });
+
+}
 
       if (rows.length === 0) {
         return res.json({
