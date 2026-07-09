@@ -191,72 +191,66 @@ app.get("/scores/:userId/:semester", (req, res) => {
 
 app.post("/admin/score", (req, res) => {
 
-const {
+    console.log(req.body);
 
-    user_id,
+    const {
+        user_id,
+        semester,
+        subject_code,
+        subject,
+        credit,
+        attendance,
+        mid,
+        final
+    } = req.body;
 
-    semester,
+    const total =
+        attendance * 0.1 +
+        mid * 0.3 +
+        final * 0.6;
 
-    subject_code,
+    db.query(
+        `
+        INSERT INTO scores
+        (
+            user_id,
+            semester,
+            subject_code,
+            subject,
+            credit,
+            attendance,
+            mid,
+            final,
+            total
+        )
+        VALUES (?,?,?,?,?,?,?,?,?)
+        `,
+        [
+            user_id,
+            semester,
+            subject_code,
+            subject,
+            credit,
+            attendance,
+            mid,
+            final,
+            total.toFixed(2)
+        ],
+        (err) => {
 
-    subject_name,
+            if (err) {
+                console.error(err);
+                return res.status(500).json({
+                    msg: err.message
+                });
+            }
 
-    credit,
+            res.json({
+                msg: "Thêm môn thành công"
+            });
 
-    attendance,
-
-    mid,
-
-    final
-
-}=req.body;
-
-  const total =
-    attendance * 0.1 +
-    mid * 0.3 +
-    final * 0.6;
-
-  db.query(
-`
-INSERT INTO scores
-(
-    user_id,
-    semester,
-    subject_code,
-    subject,
-    credit,
-    attendance,
-    mid,
-    final,
-    total
-)
-VALUES (?,?,?,?,?,?,?,?,?)
-`,
-[
-    user_id,
-    semester,
-    subject_code,
-    subject,
-    credit,
-    attendance,
-    mid,
-    final,
-    total.toFixed(2)
-],
-    err => {
-
-      if (err) {
-        return res.status(500).json({
-          msg: err.message
-        });
-      }
-
-      res.json({
-        msg: "Thêm môn thành công"
-      });
-
-    }
-  );
+        }
+    );
 
 });
 
