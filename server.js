@@ -414,27 +414,6 @@ app.delete("/planned-subject/:id", (req, res) => {
 
 
 
-app.get("/curriculum", (req,res)=>{
-
-  db.query(
-    `
-    SELECT *
-    FROM curriculum
-    ORDER BY semester,id
-    `,
-    (err,rows)=>{
-
-      if(err){
-        return res.status(500).json({
-          msg:err.message
-        });
-      }
-
-      res.json(rows);
-    }
-  );
-
-});
 
 
 app.get("/curriculum",(req,res)=>{
