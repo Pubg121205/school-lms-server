@@ -1172,57 +1172,88 @@ for(const subject of recommend){
                     //==========================
                     // TẠO CÂU TRẢ LỜI
                     //==========================
+let answer = `Đề xuất đăng ký học kỳ ${nextSemester}\n\n`;
 
-                    let answer=
-`Đề xuất đăng ký học kỳ ${nextSemester}
 
-`;
-                  if(retakeSubjects.length){
+//==============================
+// 1. MÔN HỌC LẠI
+//==============================
 
-    answer+="Các môn nên học lại:\n";
+if(retakeSubjects.length){
 
-    retakeSubjects.forEach(name=>{
+    answer += "=== MÔN HỌC LẠI ===\n\n";
 
-        answer+="• "+name+"\n";
+    retakeSubjects.forEach(subject=>{
 
-    });
-
-    answer+="\n";
-
-}
-
-                    if(finalRecommend.length){
-
-                        finalRecommend.forEach(subject=>{
-
-                            answer+=
+        answer +=
 `• ${subject.subject_code}
 - ${subject.subject_name}
 (${subject.credit} tín chỉ)
 
 `;
 
-                        });
+    });
 
-                        answer+=
-`Tổng tín chỉ: ${creditSum}/22
+}
+
+
+//==============================
+// 2. MÔN THEO CTĐT
+//==============================
+
+if(finalRecommend.length){
+
+    answer += "=== MÔN ĐĂNG KÝ MỚI ===\n\n";
+
+    finalRecommend.forEach(subject=>{
+
+        answer +=
+`• ${subject.subject_code}
+- ${subject.subject_name}
+(${subject.credit} tín chỉ)
 
 `;
 
-                        answer+=
+    });
+
+}
+
+
+//==============================
+// 3. MÔN CẢI THIỆN
+//==============================
+
+if(improveSubjects.length){
+
+    answer += "=== MÔN NÊN HỌC CẢI THIỆN ===\n\n";
+
+    improveSubjects.forEach(subject=>{
+
+        answer +=
+`• ${subject.subject_code}
+- ${subject.subject_name}
+Điểm hiện tại: ${subject.total}
+
+`;
+
+    });
+
+}
+
+
+//==============================
+
+answer += `Tổng tín chỉ đề xuất: ${creditSum}/22\n\n`;
+
+answer +=
 `Lý do đề xuất:
+
 - Ưu tiên môn còn nợ.
 - Ưu tiên học lại môn trượt.
 - Hoàn thành môn tiên quyết.
 - Sau đó học các môn đúng CTĐT.
 - Cuối cùng mới học cải thiện.
 `;
-
-                    }else{
-
-                        answer+="Không có môn phù hợp.\n";
-
-                    }
 
                     if(cannotLearn.length){
 
