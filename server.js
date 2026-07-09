@@ -717,6 +717,16 @@ WHERE user_id = ?
 `,
 [userId],
 (err, rows) => {
+
+if(err){
+
+    console.log(err);
+
+    return res.json({
+        advice: err.message
+    });
+
+}
 const improveSubjects = [];
 
 rows.forEach(row => {
@@ -733,16 +743,6 @@ rows.forEach(row => {
     }
 
 });
-if(err){
-
-    console.log(err);
-
-    return res.json({
-        advice: err.message
-    });
-
-}
-
       if (rows.length === 0) {
         return res.json({
           advice: "Chưa có dữ liệu học tập."
