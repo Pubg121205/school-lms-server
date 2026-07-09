@@ -539,22 +539,7 @@ app.put("/curriculum/:id",(req,res)=>{
 });
 
 
-const improveSubjects = [];
 
-rows.forEach(row => {
-
-    if (row.total >= 5 && row.total < 8) {
-
-        improveSubjects.push({
-            subject_code: row.subject_code,
-            subject_name: row.subject,
-            credit: row.credit,
-            total: row.total
-        });
-
-    }
-
-});
 
 app.delete("/curriculum/:id",(req,res)=>{
 
@@ -732,7 +717,22 @@ WHERE user_id = ?
 `,
 [userId],
 (err, rows) => {
+const improveSubjects = [];
 
+rows.forEach(row => {
+
+    if (row.total >= 5 && row.total < 8) {
+
+        improveSubjects.push({
+            subject_code: row.subject_code,
+            subject_name: row.subject,
+            credit: row.credit,
+            total: row.total
+        });
+
+    }
+
+});
 if(err){
 
     console.log(err);
