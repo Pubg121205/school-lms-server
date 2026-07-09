@@ -188,8 +188,7 @@ app.get("/scores/:userId/:semester", (req, res) => {
 });
 
 /* ADD SCORE */
-
-app.post("/admin/score", (req, res) => {
+app.post("/admin/score",(req,res)=>{
 
     console.log(req.body);
 
@@ -205,55 +204,56 @@ app.post("/admin/score", (req, res) => {
     } = req.body;
 
     const total =
-        attendance * 0.1 +
-        mid * 0.3 +
-        final * 0.6;
+        attendance*0.1+
+        mid*0.3+
+        final*0.6;
 
     db.query(
-        `
-        INSERT INTO scores
-        (
-            user_id,
-            semester,
-            subject_code,
-            subject,
-            credit,
-            attendance,
-            mid,
-            final,
-            total
-        )
-        VALUES (?,?,?,?,?,?,?,?,?)
-        `,
-        [
-            user_id,
-            semester,
-            subject_code,
-            subject,
-            credit,
-            attendance,
-            mid,
-            final,
-            total.toFixed(2)
-        ],
-        (err) => {
+`
+INSERT INTO scores
+(
+user_id,
+semester,
+subject,
+credit,
+attendance,
+mid,
+final,
+total,
+subject_code
+)
+VALUES(?,?,?,?,?,?,?,?,?)
+`,
+[
+user_id,
+semester,
+subject,
+credit,
+attendance,
+mid,
+final,
+total,
+subject_code
+],
+(err)=>{
 
-            if (err) {
-                console.error(err);
-                return res.status(500).json({
-                    msg: err.message
-                });
-            }
+    if(err){
 
-            res.json({
-                msg: "Thêm môn thành công"
-            });
+        console.log(err);
 
-        }
-    );
+        return res.status(500).json({
+            msg:err.message
+        });
+
+    }
+
+    res.json({
+        msg:"Thêm thành công"
+    });
 
 });
 
+});
 app.post("/admin/planned-subject",(req,res)=>{
 
   const {
