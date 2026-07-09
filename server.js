@@ -755,6 +755,25 @@ rows.forEach(row => {
       const failedSubjects = [];
       const weakSubjects = [];
 
+  failedSubjects.forEach(subject => {
+
+    if (totalCredit >= 22) return;
+
+    if (totalCredit + Number(subject.credit) <= 22) {
+
+        suggested.push({
+            subject_code: subject.subject_code,
+            subject_name: subject.subject_name,
+            credit: Number(subject.credit),
+            total: Number(row.total)
+        });
+
+        totalCredit += Number(subject.credit);
+
+    }
+
+});
+
       rows.forEach(row => {
 
         const score = Number(row.total);
@@ -1113,7 +1132,7 @@ else if(
 
                             prioritySubjects.push(subject);
 
-                            retakeSubjects.push(subject.subject_name);
+                            retakeSubjects.push(subject.subject);
                             return;
 
                         }
@@ -1189,6 +1208,28 @@ for(const subject of recommend){
 
 }
 
+                  // Nếu chưa đủ 22 TC thì thêm môn học lại
+for (const subject of prioritySubjects) {
+
+    // chỉ lấy môn học lại
+    if (!failedCodes.includes(subject.subject_code)) continue;
+
+    // tránh trùng
+    if (finalRecommend.some(s => s.subject_code === subject.subject_code))
+        continue;
+
+    const tc = Number(subject.credit);
+
+    if (creditSum + tc > 22)
+        continue;
+
+    finalRecommend.push(subject);
+    creditSum += tc;
+
+    if (creditSum >= 22)
+        break;
+}
+
                     //==========================
                     // TẠO CÂU TRẢ LỜI
                     //==========================
@@ -1251,7 +1292,6 @@ improveSubjects.forEach(subject => {
 
     if (totalCredit + Number(subject.credit) <= 22) {
 
-        suggested.push(subject);
         totalCredit += Number(subject.credit);
 
     }
