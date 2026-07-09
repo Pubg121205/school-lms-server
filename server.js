@@ -709,17 +709,14 @@ app.get("/advice/:userId/:semester", (req, res) => {
   const { userId, semester } = req.params;
   const question = (req.query.q || "").toLowerCase();
 
-  db.query(
-    `
+ db.query(
+`
 SELECT *
 FROM scores
-WHERE student_id=?
-ORDER BY semester
-    
-    `,
-    
-    [userId],
-    (err, rows) => {
+WHERE user_id = ?
+`,
+[userId],
+(err, rows) => {
 
 if(err){
 
